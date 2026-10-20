@@ -1,0 +1,2985 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0b">
+<title>Worker Forge — Cloudflare Workers API Builder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0a0b'/%3E%3Cpath d='M8 10l8 6-8 6M18 22h6' stroke='%23f59e0b' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0a0a0b;--surface:#131316;--surface-2:#1a1a1f;--surface-3:#232329;
+  --border:#232328;--border-2:#2e2e35;
+  --text:#f4f4f5;--text-2:#a1a1aa;--text-3:#71717a;
+  --accent:#f59e0b;--accent-h:#d97706;--accent-soft:rgba(245,158,11,.1);--accent-border:rgba(245,158,11,.28);
+  --green:#10b981;--green-soft:rgba(16,185,129,.1);
+  --red:#ef4444;--red-soft:rgba(239,68,68,.1);
+  --blue:#3b82f6;--blue-soft:rgba(59,130,246,.1);
+  --purple:#8b5cf6;--purple-soft:rgba(139,92,246,.1);
+  --r-sm:8px;--r:10px;--r-md:12px;--r-lg:16px;
+  --sh-1:0 1px 2px rgba(0,0,0,.3);
+  --sh-2:0 4px 12px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+  --sh-3:0 12px 32px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.3);
+  --sidebar-w:240px;--header-h:56px;
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+  --ease:cubic-bezier(.4,0,.2,1);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+[data-theme="light"]{
+  --bg:#fafafa;--surface:#fff;--surface-2:#f4f4f5;--surface-3:#e8e8ec;
+  --border:#e4e4e7;--border-2:#d4d4d8;
+  --text:#09090b;--text-2:#52525b;--text-3:#a1a1aa;
+  --accent:#d97706;--accent-h:#b45309;--accent-soft:rgba(217,119,6,.08);--accent-border:rgba(217,119,6,.25);
+  --sh-1:0 1px 2px rgba(0,0,0,.04);
+  --sh-2:0 4px 12px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.04);
+  --sh-3:0 12px 32px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.05);
+}
+[data-theme="light"]{color-scheme:light}
+[data-theme="dark"]{color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+html{background:var(--bg)}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif;
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  letter-spacing:-.006em;overflow-x:hidden;
+  transition:background .2s var(--ease),color .2s var(--ease);
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer}
+a{color:var(--accent);text-decoration:none}
+img{display:block;max-width:100%}
+::selection{background:var(--accent-soft)}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:99px;border:2px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+
+.app{display:flex;min-height:100vh}
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);
+  background:var(--bg);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:14px 10px calc(14px + var(--sab)) 10px;z-index:40;
+  transition:transform .3s var(--ease);
+}
+.sb-head{display:flex;align-items:center;gap:9px;padding:6px 8px 18px}
+.sb-logo{width:28px;height:28px;border-radius:8px;
+  background:linear-gradient(135deg,#f59e0b,#ef4444);
+  display:grid;place-items:center;flex:0 0 auto;
+  box-shadow:0 4px 16px -4px var(--accent);}
+.sb-logo svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.sb-name{font-size:14px;font-weight:600;letter-spacing:-.015em}
+.sb-ver{margin-left:auto;font-size:10px;color:var(--text-3);font-weight:500;padding:2px 6px;border-radius:4px;background:var(--surface-2)}
+.sb-nav{flex:1;overflow-y:auto;padding:4px 0}
+.sb-label{padding:10px 10px 6px;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+.sb-item{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:9px 10px;border-radius:8px;color:var(--text-2);
+  font-size:13.5px;font-weight:450;text-align:left;
+  transition:background .12s var(--ease),color .12s var(--ease);
+  position:relative;margin-bottom:1px;
+}
+.sb-item:hover{background:var(--surface-2);color:var(--text)}
+.sb-item.active{background:var(--surface-2);color:var(--text);font-weight:500}
+.sb-item.active::before{content:"";position:absolute;top:50%;left:-10px;transform:translateY(-50%);width:3px;height:18px;border-radius:0 3px 3px 0;background:var(--accent)}
+.sb-item svg{width:16px;height:16px;stroke-width:1.75;flex:0 0 auto;opacity:.75;stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sb-item.active svg{opacity:1;color:var(--accent)}
+.sb-foot{padding-top:12px;border-top:1px solid var(--border);margin-top:8px}
+.sb-stat{padding:8px 10px;border-radius:8px;background:var(--surface);
+  display:flex;align-items:center;gap:10px;font-size:12px}
+.sb-stat svg{width:14px;height:14px;stroke-width:1.75;color:var(--accent);fill:none;stroke:currentColor}
+.sb-stat .v{font-weight:600;font-variant-numeric:tabular-nums}
+.sb-stat .l{color:var(--text-3);font-size:11.5px}
+.main{flex:1;margin-left:var(--sidebar-w);min-width:0;display:flex;flex-direction:column}
+.topbar{
+  position:sticky;top:0;z-index:30;height:var(--header-h);
+  display:flex;align-items:center;gap:12px;
+  padding:0 20px;padding-top:var(--sat);
+  background:var(--bg);border-bottom:1px solid var(--border);
+}
+.tb-title{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0;display:flex;align-items:center;gap:10px}
+.tb-title .meta{font-size:12px;color:var(--text-3);font-weight:400;padding-left:10px;border-left:1px solid var(--border)}
+.tb-spacer{flex:1}
+.tb-btn{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:var(--text-2);transition:all .12s var(--ease)}
+.tb-btn:hover{background:var(--surface-2);color:var(--text)}
+.tb-btn:active{transform:scale(.94)}
+.tb-btn svg{width:16px;height:16px;stroke-width:1.75;fill:none;stroke:currentColor}
+.content{flex:1;padding:20px 20px calc(60px + var(--sab)) 20px;max-width:1400px;width:100%;margin:0 auto}
+.mobnav{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;
+  background:rgba(10,10,11,.94);
+  backdrop-filter:blur(24px) saturate(160%);
+  -webkit-backdrop-filter:blur(24px) saturate(160%);
+  border-top:1px solid var(--border);
+  padding:6px 4px calc(var(--sab) + 6px) 4px;
+}
+[data-theme="light"] .mobnav{background:rgba(250,250,250,.94)}
+.mobnav button{
+  flex:1;min-height:52px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;
+  color:var(--text-3);border-radius:8px;font-size:10px;font-weight:600;
+  letter-spacing:.02em;text-transform:uppercase;
+  transition:color .15s var(--ease),background .15s var(--ease);
+}
+.mobnav button svg{width:20px;height:20px;stroke-width:1.75;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.mobnav button[aria-current="page"]{color:var(--text);background:var(--surface-2)}
+.mobnav button[aria-current="page"] svg{color:var(--accent)}
+@media (max-width:1000px){
+  .sidebar{transform:translateX(-100%);box-shadow:var(--sh-3)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .mobnav{display:flex}
+  .content{padding:16px 16px calc(84px + var(--sab)) 16px}
+  .tb-title .meta{display:none}
+}
+.sb-backdrop{position:fixed;inset:0;z-index:39;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s var(--ease)}
+.sb-backdrop.on{opacity:1;pointer-events:auto}
+@media (min-width:1001px){.sb-backdrop{display:none}}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:36px;padding:0 14px;border-radius:8px;
+  font-size:13px;font-weight:500;border:1px solid transparent;
+  background:var(--surface-2);color:var(--text);white-space:nowrap;
+  transition:all .12s var(--ease);cursor:pointer;
+}
+.btn svg{width:15px;height:15px;stroke-width:2;fill:none;stroke:currentColor}
+.btn:hover{background:var(--surface-3)}
+.btn:active{transform:translateY(.5px)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:0 4px 16px -6px var(--accent)}
+.btn.primary:hover{background:var(--accent-h)}
+.btn.ghost{background:transparent;color:var(--text-2)}
+.btn.ghost:hover{background:var(--surface-2);color:var(--text)}
+.btn.danger{color:var(--red)}
+.btn.danger:hover{background:var(--red-soft)}
+.btn.sm{min-height:30px;padding:0 10px;font-size:12px;border-radius:7px}
+.btn.sm svg{width:13px;height:13px}
+.btn.block{width:100%}
+.btn.icon{padding:0;width:36px;min-width:36px}
+.btn.icon svg{width:16px;height:16px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-title{font-size:13.5px;font-weight:600;margin:0;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.card-title svg{width:16px;height:16px;stroke-width:1.75;fill:none;stroke:var(--accent)}
+.card-sub{font-size:12px;color:var(--text-3);margin:2px 0 0}
+.card-body{padding:18px}
+
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{font-size:12px;font-weight:500;color:var(--text-2);
+  display:flex;justify-content:space-between;align-items:center;gap:8px}
+.field .hint{font-size:11px;color:var(--text-3);font-weight:400}
+.input,.select,.textarea{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:9px 11px;font-size:13.5px;color:var(--text);
+  transition:all .12s var(--ease);
+}
+.input,.select{height:38px}
+.textarea{min-height:80px;padding:10px 11px;line-height:1.5;resize:vertical;
+  font-family:var(--mono);font-size:12px}
+.input::placeholder,.textarea::placeholder{color:var(--text-3)}
+.input:focus,.select:focus,.textarea:focus{
+  border-color:var(--accent-border);
+  box-shadow:0 0 0 3px var(--accent-soft);outline:none;
+}
+.select{
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;background-size:14px;
+  padding-right:34px;
+}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 11px;border-radius:99px;
+  font-size:12px;font-weight:500;
+  background:var(--surface-2);border:1px solid transparent;color:var(--text-2);
+  cursor:pointer;transition:all .12s var(--ease);white-space:nowrap;
+}
+.chip:hover{background:var(--surface-3);color:var(--text)}
+.chip.active{background:var(--accent-soft);border-color:var(--accent-border);color:var(--accent)}
+[data-theme="dark"] .chip.active{color:#fbbf24}
+
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 8px;border-radius:5px;
+  font-size:11px;font-weight:500;
+  background:var(--surface-2);color:var(--text-2);
+}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+.badge.green{background:var(--green-soft);color:var(--green)}
+.badge.amber{background:var(--accent-soft);color:var(--accent)}
+.badge.red{background:var(--red-soft);color:var(--red)}
+.badge.blue{background:var(--blue-soft);color:var(--blue)}
+.badge.purple{background:var(--purple-soft);color:var(--purple)}
+.badge.no-dot::before{display:none}
+
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 24px;text-align:center;color:var(--text-3)}
+.empty svg{width:32px;height:32px;stroke-width:1.4;fill:none;stroke:currentColor;opacity:.5;margin-bottom:14px}
+.empty h3{font-size:15px;font-weight:500;color:var(--text);margin:0 0 6px}
+.empty p{font-size:13px;margin:0 0 18px;max-width:380px;line-height:1.55}
+
+.spinner{display:inline-block;width:16px;height:16px;
+  border:2px solid var(--surface-3);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite}
+.spinner.lg{width:32px;height:32px;border-width:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.code-block{background:#0d0d10;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+[data-theme="light"] .code-block{background:#fafafa}
+.code-head{
+  padding:8px 12px;background:var(--surface-2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  font-size:11.5px;color:var(--text-3);font-family:var(--mono);
+}
+.code-head .lang{color:var(--accent);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+pre.code{
+  margin:0;padding:14px 16px;overflow-x:auto;
+  font-family:var(--mono);font-size:12px;line-height:1.65;
+  color:#e4e4e7;max-height:520px;
+}
+[data-theme="light"] pre.code{color:#18181b}
+pre.code .c-com{color:#71717a;font-style:italic}
+pre.code .c-str{color:#86efac}
+pre.code .c-kw{color:#c4b5fd;font-weight:500}
+pre.code .c-num{color:#fbbf24}
+[data-theme="light"] pre.code .c-str{color:#16a34a}
+[data-theme="light"] pre.code .c-kw{color:#7c3aed}
+[data-theme="light"] pre.code .c-num{color:#d97706}
+
+.grid-2{display:grid;gap:18px;grid-template-columns:minmax(300px,1fr) minmax(0,1.6fr)}
+@media (max-width:900px){.grid-2{grid-template-columns:1fr}}
+.grid-3{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+
+.result{border-radius:var(--r);border:1px solid var(--border);background:var(--surface);overflow:hidden}
+.result-head{
+  padding:10px 14px;background:var(--surface-2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;
+}
+.result-body{padding:16px;max-height:440px;overflow:auto}
+.result-body pre{margin:0;font-family:var(--mono);font-size:12px;line-height:1.6;
+  white-space:pre-wrap;word-break:break-word;color:var(--text-2)}
+.result-body img{max-width:100%;max-height:360px;border-radius:8px;
+  box-shadow:var(--sh-2);display:block;margin:0 auto}
+
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--border);position:relative}
+.step:last-child{border-bottom:none}
+.step-num{width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:var(--accent-soft);border:1px solid var(--accent-border);
+  color:var(--accent);display:grid;place-items:center;
+  font-size:12px;font-weight:700}
+.step-body{flex:1;min-width:0}
+.step-title{font-size:13.5px;font-weight:600;margin:0 0 4px}
+.step-desc{font-size:12.5px;color:var(--text-2);margin:0 0 10px;line-height:1.55}
+.step-action{margin-top:10px}
+
+.copy-row{display:flex;align-items:center;gap:8px;padding:10px 12px;
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:8px;font-family:var(--mono);font-size:12px;
+  word-break:break-all;color:var(--text-2)}
+.copy-row .val{flex:1;min-width:0}
+.copy-row button{width:28px;height:28px;border-radius:6px;flex-shrink:0;
+  display:grid;place-items:center;color:var(--text-3);transition:all .12s var(--ease)}
+.copy-row button:hover{background:var(--surface-3);color:var(--text)}
+.copy-row button svg{width:14px;height:14px;stroke-width:2;fill:none;stroke:currentColor}
+
+.toasts{position:fixed;bottom:20px;right:20px;z-index:200;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:400px}
+@media (max-width:900px){.toasts{left:14px;right:14px;bottom:calc(84px + var(--sab))}}
+.toast{display:flex;align-items:center;gap:10px;padding:11px 14px;
+  background:var(--surface-2);border:1px solid var(--border-2);
+  border-radius:var(--r-sm);box-shadow:var(--sh-3);
+  font-size:13px;pointer-events:auto;
+  opacity:0;transform:translateY(10px) scale(.97);
+  transition:all .22s cubic-bezier(.34,1.2,.5,1)}
+.toast.in{opacity:1;transform:none}
+.toast svg{width:15px;height:15px;flex-shrink:0;stroke-width:2;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.toast.ok svg{stroke:var(--green)}
+.toast.err svg{stroke:var(--red)}
+.toast.warn svg{stroke:var(--accent)}
+.toast.info svg{stroke:var(--blue)}
+.toast .msg{flex:1;min-width:0}
+
+.modal-backdrop{position:fixed;inset:0;z-index:80;
+  background:rgba(0,0,0,.7);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  opacity:0;pointer-events:none;transition:opacity .2s var(--ease);
+  display:grid;place-items:center;padding:24px}
+.modal-backdrop.on{opacity:1;pointer-events:auto}
+.modal{width:100%;max-width:640px;max-height:88vh;
+  background:var(--surface);border:1px solid var(--border-2);
+  border-radius:var(--r-lg);box-shadow:var(--sh-3);
+  display:flex;flex-direction:column;overflow:hidden;
+  transform:scale(.96) translateY(8px);
+  transition:transform .22s cubic-bezier(.34,1.2,.5,1)}
+.modal-backdrop.on .modal{transform:scale(1) translateY(0)}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.modal-title{font-size:15px;font-weight:600;margin:0}
+.modal-sub{font-size:12px;color:var(--text-3);margin:3px 0 0}
+.modal-body{padding:20px;overflow-y:auto}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);
+  display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+.hidden{display:none!important}
+.mono{font-family:var(--mono)}
+
+/* QR */
+.qr-wrap{
+  background:#fff;border-radius:var(--r-md);
+  padding:14px;display:inline-block;
+  box-shadow:var(--sh-2);
+  line-height:0;
+}
+.qr-wrap canvas{display:block;image-rendering:pixelated}
+.qr-frame{
+  display:flex;flex-direction:column;align-items:center;
+  gap:12px;padding:20px;
+}
+.qr-frame .caption{
+  font-size:12px;color:var(--text-3);text-align:center;max-width:280px;
+  line-height:1.5;
+}
+
+/* Parameter tester */
+.param-row{
+  display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--border);
+}
+.param-row:last-child{border-bottom:none}
+.param-row label{
+  font-family:var(--mono);font-size:12px;color:var(--text-2);
+  font-weight:500;word-break:break-all;
+}
+.param-row .input{height:34px;padding:6px 10px;font-size:12.5px}
+.param-row select.input{height:34px}
+
+/* Vivid hero card */
+.vivid-card{
+  background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(245,158,11,.08));
+  border:1px solid rgba(139,92,246,.25);
+  border-radius:var(--r-md);
+  padding:18px;
+  position:relative;overflow:hidden;
+}
+.vivid-card::before{
+  content:"";position:absolute;top:-30%;right:-10%;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(139,92,246,.3),transparent 70%);
+  pointer-events:none;
+}
+.vivid-card .vhead{
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative;
+}
+.vivid-card .vlogo{
+  width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,#8b5cf6,#c084fc);
+  display:grid;place-items:center;flex-shrink:0;
+  box-shadow:0 4px 14px -4px #8b5cf6;
+}
+.vivid-card .vlogo svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.4}
+.vivid-card .vtitle{font-size:15px;font-weight:600;letter-spacing:-.015em}
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sb-head">
+    <div class="sb-logo"><svg viewBox="0 0 24 24"><path d="M5 7l7 5-7 5M14 17h5"/></svg></div>
+    <div class="sb-name">Worker Forge</div>
+    <span class="sb-ver">v2.0</span>
+  </div>
+  <nav class="sb-nav" id="sbNav"></nav>
+  <div class="sb-foot">
+    <div class="sb-stat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <div>
+        <div class="v" id="sbCache">0</div>
+        <div class="l">cached entries</div>
+      </div>
+    </div>
+  </div>
+</aside>
+<div class="sb-backdrop" id="sbBackdrop"></div>
+
+<main class="main">
+  <header class="topbar">
+    <button class="tb-btn" id="btnMenu" aria-label="Menu" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <h1 class="tb-title" id="pageTitle">Design</h1>
+    <div class="tb-spacer"></div>
+    <button class="tb-btn" id="btnTheme" aria-label="Theme">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+    <button class="tb-btn" id="btnReset" aria-label="Reset" title="Reset config">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+    </button>
+  </header>
+  <div class="content" id="view"></div>
+</main>
+
+<nav class="mobnav" id="mobNav"></nav>
+<div class="toasts" id="toasts"></div>
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modal"></div></div>
+
+<script>
+"use strict";
+/* ============================================================
+   WORKER FORGE v2.0
+   ============================================================ */
+
+const CONFIG = {
+  app: { name: 'Worker Forge', version: '2.0.0' },
+  deploy: {
+    deployButtonBase: 'https://deploy.workers.cloudflare.com/?url=',
+    playgroundBase: 'https://workers.cloudflare.com/playground',
+    dashboard: 'https://dash.cloudflare.com/?to=/:account/workers-and-pages'
+  },
+  vivid: {
+    // Change this to where you host Vivid
+    url: 'https://alirezassezar1-svg.github.io/vivid/',
+    name: 'Vivid'
+  }
+};
+
+/* ---------- UTILS ---------- */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+function el(html) {
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
+}
+function debounce(fn, ms = 180) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text).then(() => true).catch(() => fallbackCopy(text));
+  }
+  return Promise.resolve(fallbackCopy(text));
+}
+function fallbackCopy(text) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy'); ta.remove(); return ok;
+  } catch { return false; }
+}
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function fmtBytes(b) {
+  if (!b && b !== 0) return '—';
+  const u = ['B','KB','MB']; let i = 0; let n = b;
+  while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+  return (i ? n.toFixed(1) : Math.round(n)) + ' ' + u[i];
+}
+
+/* ---------- SYNTAX HIGHLIGHTER (FIXED) ---------- */
+function highlightJS(code) {
+  const tokens = [];
+  const MARK = '\u0001TOK';
+  const save = (html) => { const i = tokens.length; tokens.push(html); return MARK + i + 'TOK\u0001'; };
+
+  let out = String(code);
+
+  // 1) Block comments
+  out = out.replace(/\/\*[\s\S]*?\*\//g, m => save('<span class="c-com">' + esc(m) + '</span>'));
+  // 2) Line comments
+  out = out.replace(/\/\/[^\n]*/g, m => save('<span class="c-com">' + esc(m) + '</span>'));
+  // 3) Strings (match BEFORE escaping!)
+  out = out.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g,
+    m => save('<span class="c-str">' + esc(m) + '</span>'));
+  // 4) Escape remaining
+  out = esc(out);
+  // 5) Keywords
+  out = out.replace(/\b(const|let|var|function|return|if|else|for|while|async|await|export|default|new|class|try|catch|throw|typeof|instanceof|of|in|this|null|true|false|undefined)\b/g,
+    '<span class="c-kw">$1</span>');
+  // 6) Numbers
+  out = out.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="c-num">$1</span>');
+  // 7) Restore tokens
+  out = out.replace(/\u0001TOK(\d+)TOK\u0001/g, (_, i) => tokens[+i]);
+  return out;
+}
+
+/* ---------- TOAST ---------- */
+const Toast = {
+  root: null,
+  icons: {
+    ok: '<path d="M20 6L9 17l-5-5"/>',
+    err: '<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
+    warn: '<path d="M12 3l10 18H2z"/><path d="M12 10v4M12 16h.01"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>'
+  },
+  init() { this.root = $('#toasts'); },
+  show(msg, type = 'info', ms = 3200) {
+    const n = el('<div class="toast ' + type + '"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">' + (this.icons[type] || this.icons.info) + '</svg><span class="msg">' + esc(msg) + '</span></div>');
+    this.root.appendChild(n);
+    requestAnimationFrame(() => n.classList.add('in'));
+    setTimeout(() => { n.classList.remove('in'); setTimeout(() => n.remove(), 240); }, ms);
+  },
+  ok(m, ms) { return this.show(m, 'ok', ms); },
+  err(m, ms) { return this.show(m, 'err', ms || 5000); },
+  warn(m, ms) { return this.show(m, 'warn', ms); },
+  info(m, ms) { return this.show(m, 'info', ms); }
+};
+
+/* ---------- MODAL ---------- */
+const Modal = {
+  root: null, backdrop: null,
+  open(html) { this.root.innerHTML = html; this.backdrop.classList.add('on'); document.body.style.overflow = 'hidden'; },
+  close() { this.backdrop.classList.remove('on'); document.body.style.overflow = ''; setTimeout(() => { if (!this.backdrop.classList.contains('on')) this.root.innerHTML = ''; }, 220); }
+};
+
+/* ============================================================
+   QR CODE — pure JS, versions 1-10, byte mode
+   ============================================================ */
+const QR = (function () {
+  // GF(256) tables
+  const EXP = new Uint8Array(512);
+  const LOG = new Uint8Array(256);
+  (function () {
+    let x = 1;
+    for (let i = 0; i < 255; i++) { EXP[i] = x; LOG[x] = i; x = (x << 1) ^ (x & 0x80 ? 0x11D : 0); }
+    for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  })();
+  function gfMul(a, b) { if (!a || !b) return 0; return EXP[LOG[a] + LOG[b]]; }
+
+  function rsGenPoly(n) {
+    let g = [1];
+    for (let i = 0; i < n; i++) {
+      const ng = new Array(g.length + 1).fill(0);
+      for (let j = 0; j < g.length; j++) { ng[j] ^= g[j]; ng[j + 1] ^= gfMul(g[j], EXP[i]); }
+      g = ng;
+    }
+    return g;
+  }
+  function rsEncode(data, ecLen) {
+    const gen = rsGenPoly(ecLen);
+    const res = new Array(data.length + ecLen).fill(0);
+    for (let i = 0; i < data.length; i++) res[i] = data[i];
+    for (let i = 0; i < data.length; i++) {
+      const coef = res[i];
+      if (!coef) continue;
+      for (let j = 1; j < gen.length; j++) res[i + j] ^= gfMul(gen[j], coef);
+    }
+    return res.slice(data.length);
+  }
+
+  // [numBlocks, dataPerBlock, ecPerBlock]  (mixed groups supported)
+  const VERSIONS = {
+    1:  [26,  [[[1,19,7]],                 [[1,16,10]],                [[1,13,13]],              [[1,9,17]]]],
+    2:  [44,  [[[1,34,10]],                [[1,28,16]],                [[1,22,22]],              [[1,16,28]]]],
+    3:  [70,  [[[1,55,15]],                [[1,44,26]],                [[2,17,18]],              [[2,13,22]]]],
+    4:  [100, [[[1,80,20]],                [[2,32,18]],                [[2,24,26]],              [[4,9,16]]]],
+    5:  [134, [[[1,108,26]],               [[2,43,24]],                [[2,15,18],[2,16,18]],    [[2,11,22],[2,12,22]]]],
+    6:  [172, [[[2,68,18]],                [[4,27,16]],                [[4,19,24]],              [[4,15,28]]]],
+    7:  [196, [[[2,78,20]],                [[4,31,18]],                [[2,14,18],[4,15,18]],    [[4,13,26],[1,14,26]]]],
+    8:  [242, [[[2,97,24]],                [[2,38,22],[2,39,22]],      [[4,18,22],[2,19,22]],    [[4,14,26],[2,15,26]]]],
+    9:  [292, [[[2,116,30]],               [[3,36,22],[2,37,22]],      [[4,16,20],[4,17,20]],    [[4,12,24],[4,13,24]]]],
+    10: [346, [[[2,68,18],[2,69,18]],      [[4,43,26],[1,44,26]],      [[6,19,24],[2,20,24]],    [[6,15,28],[2,16,28]]]]
+  };
+
+  const ALIGN = {
+    1: [], 2: [6, 18], 3: [6, 22], 4: [6, 26], 5: [6, 30],
+    6: [6, 34], 7: [6, 22, 38], 8: [6, 24, 42], 9: [6, 26, 46], 10: [6, 28, 50]
+  };
+
+  function ecIndex(name) { return { L: 0, M: 1, Q: 2, H: 3 }[name] || 0; }
+  function dataBytes(ver, ec) {
+    const groups = VERSIONS[ver][1][ec];
+    let total = 0;
+    for (const g of groups) total += g[0] * g[1];
+    return total;
+  }
+  function pickVersion(len, ec) {
+    for (let v = 1; v <= 10; v++) {
+      const lenBits = v < 10 ? 8 : 16;
+      const maxDataBits = dataBytes(v, ec) * 8 - 4 - lenBits;
+      if (Math.floor(maxDataBits / 8) >= len) return v;
+    }
+    return 0;
+  }
+
+  function encodeData(text, ver, ec) {
+    const bytes = new TextEncoder().encode(text);
+    const groups = VERSIONS[ver][1][ec];
+    let totalData = 0;
+    for (const g of groups) totalData += g[0] * g[1];
+    const capacityBits = totalData * 8;
+
+    const bits = [];
+    function push(val, len) { for (let i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); }
+
+    push(0b0100, 4); // byte mode
+    push(bytes.length, ver < 10 ? 8 : 16);
+    for (const b of bytes) push(b, 8);
+    for (let i = 0; i < 4 && bits.length < capacityBits; i++) bits.push(0);
+    while (bits.length % 8) bits.push(0);
+    const pad = [0xEC, 0x11]; let pi = 0;
+    while (bits.length < capacityBits) push(pad[pi++ % 2], 8);
+
+    const data = [];
+    for (let i = 0; i < bits.length; i += 8) {
+      let b = 0;
+      for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+      data.push(b);
+    }
+
+    // Split into blocks per group definition
+    const dataBlocks = [];
+    const ecBlocks = [];
+    let off = 0;
+    for (const g of groups) {
+      const [n, dsize, esize] = g;
+      for (let i = 0; i < n; i++) {
+        const block = data.slice(off, off + dsize);
+        off += dsize;
+        dataBlocks.push(block);
+        ecBlocks.push(rsEncode(block, esize));
+      }
+    }
+
+    // Interleave data
+    const interleaved = [];
+    const maxData = Math.max(...dataBlocks.map(b => b.length));
+    for (let i = 0; i < maxData; i++) for (const b of dataBlocks) if (i < b.length) interleaved.push(b[i]);
+    const maxEc = Math.max(...ecBlocks.map(b => b.length));
+    for (let i = 0; i < maxEc; i++) for (const b of ecBlocks) if (i < b.length) interleaved.push(b[i]);
+    return interleaved;
+  }
+
+  function makeMatrix(ver) {
+    const size = ver * 4 + 17;
+    return Array.from({ length: size }, () => new Array(size).fill(null));
+  }
+
+  function placePatterns(m, ver) {
+    const size = m.length;
+
+    function finder(row, col) {
+      for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) {
+        const rr = row + r, cc = col + c;
+        if (rr < 0 || rr >= size || cc < 0 || cc >= size) continue;
+        const ring = (r >= 0 && r <= 6 && (c === 0 || c === 6)) || (c >= 0 && c <= 6 && (r === 0 || r === 6));
+        const center = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+        m[rr][cc] = (ring || center) ? 1 : 0;
+      }
+    }
+    finder(0, 0); finder(0, size - 7); finder(size - 7, 0);
+
+    for (let i = 8; i < size - 8; i++) {
+      if (m[6][i] === null) m[6][i] = i % 2 === 0 ? 1 : 0;
+      if (m[i][6] === null) m[i][6] = i % 2 === 0 ? 1 : 0;
+    }
+
+    if (ver >= 2) {
+      const pos = ALIGN[ver];
+      for (const r of pos) for (const c of pos) {
+        if ((r < 9 && c < 9) || (r < 9 && c > size - 10) || (r > size - 10 && c < 9)) continue;
+        for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) {
+          const v = (Math.abs(dr) === 2 || Math.abs(dc) === 2 || (dr === 0 && dc === 0)) ? 1 : 0;
+          m[r + dr][c + dc] = v;
+        }
+      }
+    }
+
+    for (let i = 0; i < 9; i++) {
+      if (m[8][i] === null) m[8][i] = 0;
+      if (m[i][8] === null) m[i][8] = 0;
+    }
+    for (let i = 0; i < 8; i++) {
+      if (m[8][size - 1 - i] === null) m[8][size - 1 - i] = 0;
+      if (m[size - 1 - i][8] === null) m[size - 1 - i][8] = 0;
+    }
+    m[size - 8][8] = 1;
+  }
+
+  function reserved(r, c, size, ver) {
+    if (r < 9 && c < 9) return true;
+    if (r < 9 && c >= size - 8) return true;
+    if (r >= size - 8 && c < 9) return true;
+    if (r === 6 || c === 6) return true;
+    if (ver >= 2) {
+      const pos = ALIGN[ver];
+      for (const ar of pos) for (const ac of pos) {
+        if ((ar < 9 && ac < 9) || (ar < 9 && ac > size - 10) || (ar > size - 10 && ac < 9)) continue;
+        if (Math.abs(r - ar) <= 2 && Math.abs(c - ac) <= 2) return true;
+      }
+    }
+    return false;
+  }
+
+  function placeData(m, cw, ver) {
+    const size = m.length;
+    const bits = [];
+    for (const c of cw) for (let i = 7; i >= 0; i--) bits.push((c >>> i) & 1);
+    let idx = 0, up = true;
+    for (let col = size - 1; col > 0; col -= 2) {
+      if (col === 6) col--;
+      for (let i = 0; i < size; i++) {
+        const row = up ? size - 1 - i : i;
+        for (const c of [col, col - 1]) {
+          if (reserved(row, c, size, ver)) continue;
+          if (m[row][c] === null) m[row][c] = idx < bits.length ? bits[idx++] : 0;
+        }
+      }
+      up = !up;
+    }
+  }
+
+  const MASKS = [
+    (r, c) => (r + c) % 2 === 0,
+    (r, c) => r % 2 === 0,
+    (r, c) => c % 3 === 0,
+    (r, c) => (r + c) % 3 === 0,
+    (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
+    (r, c) => ((r * c) % 2) + ((r * c) % 3) === 0,
+    (r, c) => (((r * c) % 2) + ((r * c) % 3)) % 2 === 0,
+    (r, c) => (((r + c) % 2) + ((r * c) % 3)) % 2 === 0
+  ];
+
+  function isFunction(r, c, size, ver) {
+    if (r < 9 && c < 9) return true;
+    if (r < 9 && c >= size - 8) return true;
+    if (r >= size - 8 && c < 9) return true;
+    if (r === 6 || c === 6) return true;
+    if (ver >= 2) {
+      const pos = ALIGN[ver];
+      for (const ar of pos) for (const ac of pos) {
+        if ((ar < 9 && ac < 9) || (ar < 9 && ac > size - 10) || (ar > size - 10 && ac < 9)) continue;
+        if (Math.abs(r - ar) <= 2 && Math.abs(c - ac) <= 2) return true;
+      }
+    }
+    return false;
+  }
+
+  function applyMask(m, mask, ver) {
+    const size = m.length;
+    const fn = MASKS[mask];
+    for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
+      if (isFunction(r, c, size, ver)) continue;
+      if (fn(r, c)) m[r][c] ^= 1;
+    }
+  }
+
+  function formatBits(ec, mask) {
+    const ecBits = [0b01, 0b00, 0b11, 0b10][ec];
+    let data = (ecBits << 3) | mask;
+    let d = data << 10;
+    const g = 0b10100110111;
+    for (let i = 4; i >= 0; i--) if (d & (1 << (i + 10))) d ^= g << i;
+    return ((data << 10) | d) ^ 0b101010000010010;
+  }
+
+  function applyFormat(m, ec, mask) {
+    const size = m.length;
+    const info = formatBits(ec, mask);
+    for (let i = 0; i < 15; i++) {
+      const bit = (info >> i) & 1;
+      let r, c;
+      if (i < 6) { r = i; c = 8; }
+      else if (i < 8) { r = i + 1; c = 8; }
+      else if (i === 8) { r = 8; c = 7; }
+      else if (i === 9) { r = 8; c = 5; }
+      else { r = 8; c = 14 - i; }
+      m[r][c] = bit;
+    }
+    for (let i = 0; i < 8; i++) m[8][size - 1 - i] = (info >> (14 - i)) & 1;
+    for (let i = 0; i < 7; i++) m[size - 1 - i][8] = (info >> i) & 1;
+    m[size - 8][8] = 1;
+  }
+
+  function penalty(m) {
+    const size = m.length;
+    let p = 0;
+    // Rule 1: runs of 5+
+    for (let r = 0; r < size; r++) {
+      let run = 1;
+      for (let c = 1; c < size; c++) {
+        if (m[r][c] === m[r][c - 1]) { run++; if (run === 5) p += 3; else if (run > 5) p++; }
+        else run = 1;
+      }
+    }
+    for (let c = 0; c < size; c++) {
+      let run = 1;
+      for (let r = 1; r < size; r++) {
+        if (m[r][c] === m[r - 1][c]) { run++; if (run === 5) p += 3; else if (run > 5) p++; }
+        else run = 1;
+      }
+    }
+    // Rule 2: 2x2 blocks
+    for (let r = 0; r < size - 1; r++) for (let c = 0; c < size - 1; c++) {
+      if (m[r][c] === m[r][c + 1] && m[r][c] === m[r + 1][c] && m[r][c] === m[r + 1][c + 1]) p += 3;
+    }
+    // Rule 3: finder-like patterns
+    const pat1 = [1,0,1,1,1,0,1,0,0,0,0];
+    const pat2 = [0,0,0,0,1,0,1,1,1,0,1];
+    function checkPattern(row, col, pat, horizontal) {
+      for (let i = 0; i < 11; i++) {
+        const r = horizontal ? row : row + i;
+        const c = horizontal ? col + i : col;
+        if (r >= size || c >= size) return false;
+        if (m[r][c] !== pat[i]) return false;
+      }
+      return true;
+    }
+    for (let r = 0; r < size; r++) for (let c = 0; c < size - 10; c++) {
+      if (checkPattern(r, c, pat1, true) || checkPattern(r, c, pat2, true)) p += 40;
+    }
+    for (let c = 0; c < size; c++) for (let r = 0; r < size - 10; r++) {
+      if (checkPattern(r, c, pat1, false) || checkPattern(r, c, pat2, false)) p += 40;
+    }
+    // Rule 4: dark ratio
+    let dark = 0;
+    for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) if (m[r][c]) dark++;
+    const ratio = (dark / (size * size)) * 100;
+    p += Math.floor(Math.abs(ratio - 50) / 5) * 10;
+    return p;
+  }
+
+  function encode(text, opts) {
+    opts = opts || {};
+    const ecName = opts.ec || 'L';
+    const ec = ecIndex(ecName);
+    const bytes = new TextEncoder().encode(text);
+    const ver = pickVersion(bytes.length, ec);
+    if (!ver) throw new Error('Data too long for QR (max ~270 bytes at L)');
+    const cw = encodeData(text, ver, ec);
+
+    // Choose best mask
+    let best = null;
+    let bestPenalty = Infinity;
+    for (let mask = 0; mask < 8; mask++) {
+      const m = makeMatrix(ver);
+      placePatterns(m, ver);
+      placeData(m, cw, ver);
+      applyMask(m, mask, ver);
+      applyFormat(m, ec, mask);
+      const p = penalty(m);
+      if (p < bestPenalty) { bestPenalty = p; best = { m, mask }; }
+    }
+    return { matrix: best.m, size: best.m.length, version: ver, mask: best.mask };
+  }
+
+  function renderCanvas(canvas, text, opts) {
+    opts = opts || {};
+    const scale = opts.scale || 6;
+    const margin = opts.margin != null ? opts.margin : 2;
+    const dark = opts.dark || '#0a0a0b';
+    const light = opts.light || '#ffffff';
+    const qr = encode(text, { ec: opts.ec || 'M' });
+    const total = (qr.size + margin * 2) * scale;
+    canvas.width = total;
+    canvas.height = total;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = light;
+    ctx.fillRect(0, 0, total, total);
+    ctx.fillStyle = dark;
+    for (let r = 0; r < qr.size; r++) for (let c = 0; c < qr.size; c++) {
+      if (qr.matrix[r][c]) {
+        ctx.fillRect((c + margin) * scale, (r + margin) * scale, scale, scale);
+      }
+    }
+    return qr;
+  }
+
+  return { encode, renderCanvas };
+})();
+
+/* ============================================================
+   TEMPLATES
+   ============================================================ */
+const TEMPLATES = {
+
+  /* ---- 1. Vivid Backend (NEW) ---- */
+  vivid: {
+    id: 'vivid',
+    name: 'Vivid Backend',
+    description: 'Cached image-generation Worker optimized as Vivid\'s backend.',
+    icon: 'vivid',
+    fields: [
+      { key: 'workerName', label: 'Worker name', type: 'text', default: 'vivid-backend' },
+      { key: 'cacheTtl', label: 'Cache TTL (seconds)', type: 'number', default: 604800, hint: '604800 = 7 days' },
+      { key: 'requireAuth', label: 'Require API token', type: 'select', default: 'no',
+        options: [{ value: 'no', label: 'No' }, { value: 'yes', label: 'Yes (Bearer via secret)' }] },
+      { key: 'corsOrigin', label: 'CORS origin', type: 'text', default: '*', hint: 'Restrict to your Vivid domain for safety' }
+    ],
+    params: [
+      { name: 'prompt', type: 'text', default: 'a serene japanese garden in autumn, golden hour', hint: 'English text' },
+      { name: 'model', type: 'select', options: ['flux', 'turbo'], default: 'flux' },
+      { name: 'w', type: 'number', default: 1024 },
+      { name: 'h', type: 'number', default: 1024 },
+      { name: 'seed', type: 'text', default: '' }
+    ],
+    generate(cfg) {
+      const authBlock = cfg.requireAuth === 'yes' ? `
+  // Auth check — set via: wrangler secret put VIVID_TOKEN
+  const auth = request.headers.get('Authorization') || '';
+  if (!env.VIVID_TOKEN || auth !== 'Bearer ' + env.VIVID_TOKEN) {
+    return json({ error: 'Unauthorized' }, 401);
+  }
+` : '';
+      return `/**
+ * ${cfg.workerName} — Vivid Backend
+ * Generated by Worker Forge.
+ *
+ * Drop-in replacement for Vivid's default image API.
+ * Adds KV caching (7-day default) and optional Bearer auth.
+ *
+ * Endpoints:
+ *   GET  /image?prompt=...&model=flux&w=1024&h=1024&seed=42
+ *   GET  /health
+ *
+ * Configure in Vivid:
+ *   Settings → Custom provider → Base URL = https://your-worker.workers.dev
+ */
+
+const CONFIG = {
+  cacheTtl: ${cfg.cacheTtl},
+  corsOrigin: '${cfg.corsOrigin}',
+  requireAuth: ${cfg.requireAuth === 'yes'},
+  maxPromptLen: 1000,
+};
+
+const CORS = {
+  'Access-Control-Allow-Origin': CONFIG.corsOrigin,
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+  'Access-Control-Max-Age': '86400',
+};
+
+function json(body, status = 200) {
+  return new Response(JSON.stringify(body, null, 2), {
+    status,
+    headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS },
+  });
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: CORS });
+    }
+
+    if (url.pathname === '/health') {
+      return json({ ok: true, worker: '${cfg.workerName}', ts: Date.now() });
+    }
+
+    if (url.pathname === '/' || url.pathname === '/image') {
+${authBlock}
+      return handleImage(url, env, ctx);
+    }
+
+    return json({ error: 'Not found', path: url.pathname }, 404);
+  },
+};
+
+async function handleImage(url, env, ctx) {
+  const prompt = url.searchParams.get('prompt');
+  if (!prompt || !prompt.trim()) return json({ error: 'Missing prompt' }, 400);
+  if (prompt.length > CONFIG.maxPromptLen) return json({ error: 'Prompt too long' }, 400);
+
+  const model = (url.searchParams.get('model') || 'flux').slice(0, 40);
+  const w = clampInt(url.searchParams.get('w'), 256, 1920, 1024);
+  const h = clampInt(url.searchParams.get('h'), 256, 1920, 1024);
+  const seedParam = url.searchParams.get('seed');
+  const seed = seedParam ? (parseInt(seedParam, 10) >>> 0) : Math.floor(Math.random() * 1e9);
+
+  const cacheKey = 'vivid:' + hashStr([prompt, model, w, h, seed].join('|'));
+
+  // 1. Cache lookup
+  try {
+    const cached = await env.CACHE_KV.get(cacheKey, { type: 'arrayBuffer' });
+    if (cached) {
+      return new Response(cached, {
+        headers: {
+          'Content-Type': 'image/png',
+          'X-Cache': 'HIT-KV',
+          'Cache-Control': 'public, max-age=' + CONFIG.cacheTtl,
+          ...CORS,
+        },
+      });
+    }
+  } catch (e) { console.warn('KV read:', e.message); }
+
+  // 2. Upstream fetch
+  const upstream = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) +
+    '?width=' + w + '&height=' + h + '&model=' + encodeURIComponent(model) +
+    '&seed=' + seed + '&nologo=true';
+
+  let res;
+  try { res = await fetch(upstream); }
+  catch (e) { return json({ error: 'Upstream fetch failed', detail: e.message }, 502); }
+
+  if (!res.ok) return json({ error: 'Upstream error', status: res.status }, 502);
+
+  const buf = await res.arrayBuffer();
+  ctx.waitUntil(
+    env.CACHE_KV.put(cacheKey, buf, { expirationTtl: CONFIG.cacheTtl })
+      .catch(e => console.warn('KV write:', e.message))
+  );
+
+  return new Response(buf, {
+    headers: {
+      'Content-Type': 'image/png',
+      'X-Cache': 'MISS',
+      'X-Seed': String(seed),
+      'Cache-Control': 'public, max-age=' + CONFIG.cacheTtl,
+      ...CORS,
+    },
+  });
+}
+
+function clampInt(v, min, max, dflt) {
+  const n = parseInt(v, 10);
+  if (isNaN(n)) return dflt;
+  return Math.max(min, Math.min(max, n));
+}
+
+function hashStr(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36);
+}`;
+    }
+  },
+
+  /* ---- 2. Image API ---- */
+  image: {
+    id: 'image',
+    name: 'Image Generation API',
+    description: 'General-purpose cached image proxy. Pollinations or Workers AI.',
+    icon: 'image',
+    fields: [
+      { key: 'workerName', label: 'Worker name', type: 'text', default: 'image-api' },
+      { key: 'upstream', label: 'Upstream', type: 'select', default: 'pollinations',
+        options: [{ value: 'pollinations', label: 'Pollinations.ai (free)' }, { value: 'workers-ai', label: 'Cloudflare Workers AI' }] },
+      { key: 'defaultModel', label: 'Default model', type: 'text', default: 'flux' },
+      { key: 'cacheTtl', label: 'Cache TTL (seconds)', type: 'number', default: 86400 },
+      { key: 'corsOrigin', label: 'CORS origin', type: 'text', default: '*' }
+    ],
+    params: [
+      { name: 'prompt', type: 'text', default: 'a red panda eating bamboo, cinematic', hint: 'English text' },
+      { name: 'model', type: 'text', default: 'flux' },
+      { name: 'w', type: 'number', default: 1024 },
+      { name: 'h', type: 'number', default: 1024 },
+      { name: 'seed', type: 'text', default: '' }
+    ],
+    generate(cfg) {
+      const aiBranch = cfg.upstream === 'workers-ai' ? `
+  try {
+    const result = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
+      prompt, steps: 4, seed: s,
+    });
+    let bytes;
+    if (result instanceof Response) bytes = await result.arrayBuffer();
+    else if (result && result.image) bytes = typeof result.image === 'string' ? b64ToBuf(result.image) : result.image;
+    else return json({ error: 'Unexpected AI response shape' }, 502);
+    ctx.waitUntil(env.CACHE_KV.put(cacheKey, bytes, { expirationTtl: CONFIG.cacheTtl }).catch(() => {}));
+    return new Response(bytes, { headers: { 'Content-Type': 'image/png', 'X-Cache': 'MISS', 'X-Engine': 'workers-ai', ...CORS } });
+  } catch (e) { return json({ error: 'Workers AI failed', detail: e.message }, 502); }` : `
+  let upstreamRes;
+  try { upstreamRes = await fetch(buildUpstream(prompt, m, w, h, s)); }
+  catch (e) { return json({ error: 'Upstream fetch failed', detail: e.message }, 502); }
+  if (!upstreamRes.ok) return json({ error: 'Upstream error', status: upstreamRes.status }, 502);
+  const buf = await upstreamRes.arrayBuffer();
+  ctx.waitUntil(env.CACHE_KV.put(cacheKey, buf, { expirationTtl: CONFIG.cacheTtl }).catch(() => {}));
+  return new Response(buf, {
+    headers: { 'Content-Type': 'image/png', 'X-Cache': 'MISS', 'X-Seed': String(s), 'X-Model': m, ...CORS },
+  });`;
+
+      return `/**
+ * ${cfg.workerName} — Image Generation API
+ *
+ * GET /image?prompt=...&model=${cfg.defaultModel}&w=1024&h=1024&seed=42
+ * GET /health
+ *
+ * Upstream: ${cfg.upstream} · Cache TTL: ${cfg.cacheTtl}s
+ */
+
+const CONFIG = {
+  upstream: '${cfg.upstream}',
+  defaultModel: '${cfg.defaultModel}',
+  cacheTtl: ${cfg.cacheTtl},
+  corsOrigin: '${cfg.corsOrigin}',
+};
+
+const CORS = {
+  'Access-Control-Allow-Origin': CONFIG.corsOrigin,
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Max-Age': '86400',
+};
+
+function json(b, s = 200) {
+  return new Response(JSON.stringify(b, null, 2), {
+    status: s,
+    headers: { 'Content-Type': 'application/json', ...CORS },
+  });
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+    if (url.pathname === '/health') return json({ ok: true, worker: '${cfg.workerName}' });
+    if (url.pathname !== '/' && url.pathname !== '/image') return json({ error: 'Not found' }, 404);
+    return handleImage(url, env, ctx);
+  },
+};
+
+async function handleImage(url, env, ctx) {
+  const prompt = url.searchParams.get('prompt');
+  if (!prompt) return json({ error: 'Missing prompt' }, 400);
+
+  const m = (url.searchParams.get('model') || CONFIG.defaultModel).slice(0, 40);
+  const w = clampInt(url.searchParams.get('w'), 256, 1920, 1024);
+  const h = clampInt(url.searchParams.get('h'), 256, 1920, 1024);
+  const s = url.searchParams.get('seed') ? (parseInt(url.searchParams.get('seed'), 10) >>> 0) : Math.floor(Math.random() * 1e9);
+
+  const cacheKey = 'img:' + hashStr([prompt, m, w, h, s].join('|'));
+
+  try {
+    const cached = await env.CACHE_KV.get(cacheKey, { type: 'arrayBuffer' });
+    if (cached) return new Response(cached, { headers: { 'Content-Type': 'image/png', 'X-Cache': 'HIT-KV', ...CORS } });
+  } catch (e) { console.warn('KV read:', e.message); }
+${aiBranch}
+}
+
+function buildUpstream(prompt, model, w, h, seed) {
+  const qs = new URLSearchParams({ width: w, height: h, model, seed, nologo: 'true' });
+  return 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?' + qs;
+}
+
+function clampInt(v, min, max, d) { const n = parseInt(v, 10); return isNaN(n) ? d : Math.max(min, Math.min(max, n)); }
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+function b64ToBuf(b) { const s = atob(b); const a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a.buffer; }`;
+    }
+  },
+
+  /* ---- 3. Chat / LLM ---- */
+  chat: {
+    id: 'chat',
+    name: 'Chat / LLM API',
+    description: 'OpenAI-compatible chat endpoint on Workers AI.',
+    icon: 'chat',
+    fields: [
+      { key: 'workerName', label: 'Worker name', type: 'text', default: 'chat-api' },
+      { key: 'model', label: 'Model', type: 'select', default: '@cf/meta/llama-3.1-8b-instruct',
+        options: [
+          { value: '@cf/meta/llama-3.1-8b-instruct', label: 'Llama 3.1 8B' },
+          { value: '@cf/meta/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
+          { value: '@cf/mistral/mistral-7b-instruct-v0.1', label: 'Mistral 7B' }
+        ]
+      },
+      { key: 'maxTokens', label: 'Max tokens', type: 'number', default: 512 },
+      { key: 'corsOrigin', label: 'CORS origin', type: 'text', default: '*' }
+    ],
+    params: [
+      { name: 'message', type: 'text', default: 'Say hello in 5 words.', hint: 'Sent as user message' }
+    ],
+    isPost: true,
+    generate(cfg) {
+      return `/**
+ * ${cfg.workerName} — Chat / LLM API
+ *
+ * POST /chat { "messages": [{ "role": "user", "content": "hi" }] }
+ * GET /health
+ *
+ * Requires binding: { "ai": { "binding": "AI" } }
+ */
+
+const CONFIG = {
+  model: '${cfg.model}',
+  maxTokens: ${cfg.maxTokens},
+  corsOrigin: '${cfg.corsOrigin}',
+};
+
+const CORS = {
+  'Access-Control-Allow-Origin': CONFIG.corsOrigin,
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Max-Age': '86400',
+};
+
+function json(b, s = 200) {
+  return new Response(JSON.stringify(b, null, 2), {
+    status: s,
+    headers: { 'Content-Type': 'application/json', ...CORS },
+  });
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+    if (url.pathname === '/health') return json({ ok: true, model: CONFIG.model });
+    if (url.pathname === '/chat' && request.method === 'POST') return handleChat(request, env);
+    return json({ error: 'Not found' }, 404);
+  },
+};
+
+async function handleChat(request, env) {
+  let body;
+  try { body = await request.json(); }
+  catch { return json({ error: 'Invalid JSON' }, 400); }
+
+  const messages = Array.isArray(body.messages) ? body.messages : null;
+  if (!messages || !messages.length) return json({ error: 'Missing messages array' }, 400);
+  if (messages.length > 50) return json({ error: 'Too many messages' }, 400);
+
+  const cleaned = [];
+  for (const m of messages) {
+    if (!m || typeof m !== 'object') return json({ error: 'Invalid message' }, 400);
+    const role = String(m.role || '');
+    if (!['system', 'user', 'assistant'].includes(role)) return json({ error: 'Invalid role: ' + role }, 400);
+    cleaned.push({ role, content: String(m.content || '').slice(0, 8000) });
+  }
+
+  const maxTokens = Math.max(1, Math.min(2048, parseInt(body.max_tokens, 10) || CONFIG.maxTokens));
+
+  try {
+    const result = await env.AI.run(CONFIG.model, { messages: cleaned, max_tokens: maxTokens });
+    return json({
+      id: 'chatcmpl-' + Date.now().toString(36),
+      object: 'chat.completion',
+      created: Math.floor(Date.now() / 1000),
+      model: CONFIG.model,
+      choices: [{ index: 0, message: { role: 'assistant', content: result.response || '' }, finish_reason: 'stop' }],
+      usage: result.usage || null,
+    });
+  } catch (e) {
+    return json({ error: 'Workers AI failed', detail: e.message }, 502);
+  }
+}`;
+    }
+  },
+
+  /* ---- 4. JSON Proxy ---- */
+  proxy: {
+    id: 'proxy',
+    name: 'Cached JSON Proxy',
+    description: 'Whitelist-guarded proxy with automatic KV caching.',
+    icon: 'proxy',
+    fields: [
+      { key: 'workerName', label: 'Worker name', type: 'text', default: 'json-proxy' },
+      { key: 'allowedHosts', label: 'Allowed hosts', type: 'text', default: 'api.github.com,jsonplaceholder.typicode.com', hint: 'Comma-separated' },
+      { key: 'cacheTtl', label: 'Cache TTL (seconds)', type: 'number', default: 300 },
+      { key: 'corsOrigin', label: 'CORS origin', type: 'text', default: '*' }
+    ],
+    params: [
+      { name: 'url', type: 'text', default: 'https://jsonplaceholder.typicode.com/todos/1' },
+      { name: 'ttl', type: 'number', default: 300 }
+    ],
+    generate(cfg) {
+      const hosts = cfg.allowedHosts.split(',').map(h => `'${h.trim()}'`).join(', ');
+      return `/**
+ * ${cfg.workerName} — Cached JSON Proxy
+ *
+ * GET /proxy?url=https://api.example.com/data
+ * GET /health
+ *
+ * Allowed hosts: ${hosts}
+ * Cache TTL: ${cfg.cacheTtl}s
+ */
+
+const CONFIG = {
+  allowedHosts: [${hosts}],
+  cacheTtl: ${cfg.cacheTtl},
+  corsOrigin: '${cfg.corsOrigin}',
+  maxBytes: 5 * 1024 * 1024,
+};
+
+const CORS = {
+  'Access-Control-Allow-Origin': CONFIG.corsOrigin,
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Max-Age': '86400',
+};
+
+function json(b, s = 200, extra = {}) {
+  return new Response(JSON.stringify(b, null, 2), {
+    status: s,
+    headers: { 'Content-Type': 'application/json', ...CORS, ...extra },
+  });
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+    if (url.pathname === '/health') return json({ ok: true, allowed: CONFIG.allowedHosts });
+    if (url.pathname !== '/proxy') return json({ error: 'Not found' }, 404);
+
+    const target = url.searchParams.get('url');
+    if (!target) return json({ error: 'Missing url' }, 400);
+
+    let u;
+    try { u = new URL(target); } catch { return json({ error: 'Invalid URL' }, 400); }
+    if (!CONFIG.allowedHosts.includes(u.hostname)) {
+      return json({ error: 'Host not allowed', host: u.hostname, allowed: CONFIG.allowedHosts }, 403);
+    }
+
+    const ttl = clampInt(url.searchParams.get('ttl'), 0, CONFIG.cacheTtl, CONFIG.cacheTtl);
+    const cacheKey = 'proxy:' + u.toString();
+
+    if (ttl > 0) {
+      try {
+        const cached = await env.CACHE_KV.get(cacheKey, { type: 'json' });
+        if (cached && cached.exp > Date.now()) return json(cached.body, cached.status, { 'X-Cache': 'HIT-KV' });
+      } catch (e) { console.warn('KV read:', e.message); }
+    }
+
+    let res;
+    try { res = await fetch(u.toString(), { redirect: 'follow' }); }
+    catch (e) { return json({ error: 'Upstream failed', detail: e.message }, 502); }
+
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength > CONFIG.maxBytes) return json({ error: 'Too large' }, 413);
+
+    let body;
+    try { body = JSON.parse(new TextDecoder().decode(buf)); }
+    catch { return json({ error: 'Not JSON' }, 502); }
+
+    if (ttl > 0) {
+      ctx.waitUntil(env.CACHE_KV.put(cacheKey, JSON.stringify({
+        body, status: res.status, stored: Date.now(), exp: Date.now() + ttl * 1000
+      }), { expirationTtl: ttl }).catch(() => {}));
+    }
+
+    return json(body, res.status, { 'X-Cache': 'MISS' });
+  },
+};
+
+function clampInt(v, min, max, d) { const n = parseInt(v, 10); return isNaN(n) ? d : Math.max(min, Math.min(max, n)); }`;
+    }
+  },
+
+  /* ---- 5. URL Shortener ---- */
+  shortener: {
+    id: 'shortener',
+    name: 'URL Shortener',
+    description: 'KV-backed short links with click stats.',
+    icon: 'link',
+    fields: [
+      { key: 'workerName', label: 'Worker name', type: 'text', default: 'short-links' },
+      { key: 'domain', label: 'Public domain', type: 'text', default: '', hint: 'Blank = use worker URL' },
+      { key: 'corsOrigin', label: 'CORS origin', type: 'text', default: '*' }
+    ],
+    params: [
+      { name: 'url', type: 'text', default: 'https://example.com/very/long/path' },
+      { name: 'slug', type: 'text', default: '', hint: 'Optional custom slug' }
+    ],
+    isPost: true,
+    generate(cfg) {
+      return `/**
+ * ${cfg.workerName} — URL Shortener
+ *
+ * POST /shorten  { "url": "https://...", "slug": "optional" }
+ * GET  /:code    → 302 redirect
+ * GET  /stats/:code → click stats
+ */
+
+const CONFIG = {
+  publicDomain: '${cfg.domain}',
+  corsOrigin: '${cfg.corsOrigin}',
+  codeLen: 7,
+  ttlDays: 365,
+};
+
+const CORS = {
+  'Access-Control-Allow-Origin': CONFIG.corsOrigin,
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Max-Age': '86400',
+};
+
+function json(b, s = 200) {
+  return new Response(JSON.stringify(b, null, 2), {
+    status: s,
+    headers: { 'Content-Type': 'application/json', ...CORS },
+  });
+}
+
+const ALPHA = '23456789abcdefghjkmnpqrstuvwxyz';
+function genCode(n) {
+  const a = new Uint8Array(n);
+  crypto.getRandomValues(a);
+  let s = '';
+  for (let i = 0; i < n; i++) s += ALPHA[a[i] % ALPHA.length];
+  return s;
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+    if (url.pathname === '/health') return json({ ok: true });
+    if (url.pathname === '/shorten' && request.method === 'POST') return handleShorten(request, env);
+    if (url.pathname.startsWith('/stats/')) {
+      const stats = await env.CACHE_KV.get('clicks:' + url.pathname.slice(7), { type: 'json' });
+      return stats ? json(stats) : json({ error: 'No stats' }, 404);
+    }
+    const code = url.pathname.slice(1);
+    if (code && /^[a-z0-9]{1,20}$/i.test(code)) return handleRedirect(request, env, ctx, code);
+    return json({ error: 'Not found' }, 404);
+  },
+};
+
+async function handleShorten(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+  const target = String(body.url || '').trim();
+  if (!target) return json({ error: 'Missing url' }, 400);
+  let u;
+  try { u = new URL(target); } catch { return json({ error: 'Invalid URL' }, 400); }
+  if (!['http:', 'https:'].includes(u.protocol)) return json({ error: 'Only http(s)' }, 400);
+
+  let code = body.slug ? String(body.slug).toLowerCase().replace(/[^a-z0-9-]/g, '') : '';
+  if (code) {
+    if (await env.CACHE_KV.get('link:' + code)) return json({ error: 'Slug taken' }, 409);
+  } else {
+    for (let i = 0; i < 5; i++) { code = genCode(CONFIG.codeLen); if (!(await env.CACHE_KV.get('link:' + code))) break; }
+  }
+
+  await env.CACHE_KV.put('link:' + code, JSON.stringify({ url: target, created: Date.now(), clicks: 0 }), { expirationTtl: CONFIG.ttlDays * 86400 });
+  const domain = CONFIG.publicDomain || new URL(request.url).origin;
+  return json({ short: domain.replace(/\\/$/, '') + '/' + code, code, target });
+}
+
+async function handleRedirect(request, env, ctx, code) {
+  const rec = await env.CACHE_KV.get('link:' + code, { type: 'json' });
+  if (!rec || !rec.url) return new Response('Not found: ' + code, { status: 404 });
+  ctx.waitUntil(env.CACHE_KV.put('clicks:' + code, JSON.stringify({ count: (rec.clicks || 0) + 1, last: Date.now() }), { expirationTtl: 365 * 86400 }).catch(() => {}));
+  return Response.redirect(rec.url, 302);
+}`;
+    }
+  },
+
+  /* ---- 6. Random Image ---- */
+  random: {
+    id: 'random',
+    name: 'Random Image API',
+    description: 'Random photo endpoint with seed support.',
+    icon: 'shuffle',
+    fields: [
+      { key: 'workerName', label: 'Worker name', type: 'text', default: 'random-image' },
+      { key: 'source', label: 'Source', type: 'select', default: 'picsum',
+        options: [{ value: 'picsum', label: 'Lorem Picsum' }, { value: 'pollinations', label: 'Pollinations AI' }] },
+      { key: 'cacheTtl', label: 'Cache TTL (seconds)', type: 'number', default: 60 },
+      { key: 'corsOrigin', label: 'CORS origin', type: 'text', default: '*' }
+    ],
+    params: [
+      { name: 'w', type: 'number', default: 800 },
+      { name: 'h', type: 'number', default: 600 },
+      { name: 'seed', type: 'text', default: '' }
+    ],
+    generate(cfg) {
+      const srcBlock = cfg.source === 'picsum' ? `
+  const w = clampInt(url.searchParams.get('w'), 100, 1920, 800);
+  const h = clampInt(url.searchParams.get('h'), 100, 1920, 600);
+  const seed = url.searchParams.get('seed') || Math.floor(Math.random() * 1e6);
+  const upstream = 'https://picsum.photos/seed/' + seed + '/' + w + '/' + h;` : `
+  const prompt = url.searchParams.get('prompt') || 'random landscape';
+  const w = clampInt(url.searchParams.get('w'), 256, 1920, 1024);
+  const h = clampInt(url.searchParams.get('h'), 256, 1920, 1024);
+  const seed = url.searchParams.get('seed') || Math.floor(Math.random() * 1e9);
+  const upstream = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?width=' + w + '&height=' + h + '&seed=' + seed + '&nologo=true';`;
+
+      return `/**
+ * ${cfg.workerName} — Random Image API
+ *
+ * GET /random?w=800&h=600&seed=42
+ */
+
+const CONFIG = { source: '${cfg.source}', cacheTtl: ${cfg.cacheTtl}, corsOrigin: '${cfg.corsOrigin}' };
+const CORS = {
+  'Access-Control-Allow-Origin': CONFIG.corsOrigin,
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Max-Age': '86400',
+};
+function json(b, s = 200) {
+  return new Response(JSON.stringify(b, null, 2), {
+    status: s,
+    headers: { 'Content-Type': 'application/json', ...CORS },
+  });
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+    if (url.pathname === '/health') return json({ ok: true, source: CONFIG.source });
+    if (url.pathname !== '/' && url.pathname !== '/random') return json({ error: 'Not found' }, 404);
+${srcBlock}
+
+    const cacheKey = 'rand:' + hashStr(upstream);
+    try {
+      const cached = await env.CACHE_KV.get(cacheKey, { type: 'arrayBuffer' });
+      if (cached) return new Response(cached, { headers: { 'Content-Type': 'image/jpeg', 'X-Cache': 'HIT-KV', ...CORS } });
+    } catch (e) { console.warn('KV read:', e.message); }
+
+    let res;
+    try { res = await fetch(upstream, { redirect: 'follow' }); }
+    catch (e) { return json({ error: 'Upstream failed', detail: e.message }, 502); }
+
+    if (!res.ok) return json({ error: 'Upstream status ' + res.status }, 502);
+
+    const buf = await res.arrayBuffer();
+    ctx.waitUntil(env.CACHE_KV.put(cacheKey, buf, { expirationTtl: CONFIG.cacheTtl }).catch(() => {}));
+
+    return new Response(buf, {
+      headers: {
+        'Content-Type': res.headers.get('content-type') || 'image/jpeg',
+        'X-Cache': 'MISS',
+        ...CORS,
+      },
+    });
+  },
+};
+
+function clampInt(v, min, max, d) { const n = parseInt(v, 10); return isNaN(n) ? d : Math.max(min, Math.min(max, n)); }
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }`;
+    }
+  },
+
+  /* ---- 7. Custom ---- */
+  custom: {
+    id: 'custom',
+    name: 'Custom Worker',
+    description: 'Minimal starter with CORS + health check.',
+    icon: 'code',
+    fields: [
+      { key: 'workerName', label: 'Worker name', type: 'text', default: 'my-worker' },
+      { key: 'corsOrigin', label: 'CORS origin', type: 'text', default: '*' }
+    ],
+    params: [],
+    generate(cfg) {
+      return `/**
+ * ${cfg.workerName}
+ */
+
+const CORS = {
+  'Access-Control-Allow-Origin': '${cfg.corsOrigin}',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Max-Age': '86400',
+};
+
+function json(b, s = 200) {
+  return new Response(JSON.stringify(b, null, 2), {
+    status: s,
+    headers: { 'Content-Type': 'application/json', ...CORS },
+  });
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+    if (url.pathname === '/health') return json({ ok: true, ts: Date.now() });
+    return json({ message: 'Hello from ${cfg.workerName}', path: url.pathname });
+  },
+};`;
+    }
+  }
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const State = {
+  templateId: 'vivid',
+  config: {},
+  params: {},
+  code: '',
+  view: 'design'
+};
+(function restore() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('wf.session.v2') || 'null');
+    if (saved && saved.templateId && TEMPLATES[saved.templateId]) {
+      State.templateId = saved.templateId;
+      State.config = saved.config || {};
+      State.params = saved.params || {};
+    }
+  } catch {}
+})();
+function persist() {
+  try {
+    localStorage.setItem('wf.session.v2', JSON.stringify({
+      templateId: State.templateId,
+      config: State.config,
+      params: State.params
+    }));
+  } catch {}
+}
+function currentTemplate() { return TEMPLATES[State.templateId]; }
+function getConfig() {
+  const tpl = currentTemplate();
+  const cfg = {};
+  for (const f of tpl.fields) cfg[f.key] = State.config[f.key] !== undefined ? State.config[f.key] : f.default;
+  return cfg;
+}
+function getParams() {
+  const tpl = currentTemplate();
+  const out = {};
+  if (!tpl.params) return out;
+  for (const f of tpl.params) out[f.name] = State.params[f.name] !== undefined ? State.params[f.name] : f.default;
+  return out;
+}
+function regenerate() {
+  State.code = currentTemplate().generate(getConfig());
+  persist();
+}
+
+/* ============================================================
+   ICONS
+   ============================================================ */
+const ICONS = {
+  vivid: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3" fill="currentColor"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-9 9"/>',
+  chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  proxy: '<path d="M4 12a8 8 0 0 1 8-8M20 12a8 8 0 0 1-8 8"/><circle cx="12" cy="12" r="3"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07L11.75 5"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07L12.25 19"/>',
+  shuffle: '<path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>',
+  code: '<path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/>',
+  copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
+  external: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/>',
+  play: '<path d="M6 4l14 8-14 8z"/>',
+  check: '<path d="M20 6L9 17l-5-5"/>',
+  x: '<path d="M18 6L6 18M6 6l12 12"/>',
+  rocket: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+  terminal: '<path d="M4 17l6-6-6-6M12 19h8"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>',
+  zap: '<path d="M13 2L3 14h9l-1 8 10-12h-9z"/>',
+  cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>',
+  qr: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M21 14v7h-7"/>'
+};
+function ico(name, cls) {
+  return '<svg class="' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || '') + '</svg>';
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+function renderSidebar() {
+  const host = $('#sbNav');
+  const tpls = Object.values(TEMPLATES);
+  host.innerHTML =
+    '<div class="sb-label">Templates</div>' +
+    tpls.map(t => (
+      '<button class="sb-item' + (t.id === State.templateId ? ' active' : '') + '" data-tpl="' + t.id + '">' +
+        ico(t.icon) + '<span>' + esc(t.name) + '</span>' +
+      '</button>'
+    )).join('') +
+    '<div class="sb-label">Workspace</div>' +
+    '<button class="sb-item" data-view="deploy">' + ico('rocket') + '<span>Deploy</span></button>' +
+    '<button class="sb-item" data-view="share">' + ico('share') + '<span>Share & QR</span></button>' +
+    '<button class="sb-item" data-view="vivid">' + ico('vivid') + '<span>Connect to Vivid</span></button>' +
+    '<button class="sb-item" data-view="docs">' + ico('info') + '<span>Guide</span></button>';
+}
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+const Views = {};
+
+/* ---------------- DESIGN ---------------- */
+Views.design = {
+  title: 'Design',
+  render() {
+    const tpl = currentTemplate();
+    const cfg = getConfig();
+    const root = el('<div></div>');
+
+    root.appendChild(el(
+      '<div style="margin-bottom:20px">' +
+        '<h2 style="font-size:22px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px">' + esc(tpl.name) + '</h2>' +
+        '<p style="font-size:13px;color:var(--text-2);margin:0">' + esc(tpl.description) + '</p>' +
+      '</div>'
+    ));
+
+    const grid = el('<div class="grid-2"></div>');
+
+    // Config form
+    const formCard = el(
+      '<div class="card">' +
+        '<div class="card-head"><h3 class="card-title">' + ico('code') + ' Configuration</h3></div>' +
+        '<div class="card-body" id="cfgForm"></div>' +
+      '</div>'
+    );
+    grid.appendChild(formCard);
+
+    const cfgForm = $('#cfgForm', formCard);
+    for (const f of tpl.fields) {
+      const field = el(
+        '<div class="field">' +
+          '<label for="f_' + f.key + '">' + esc(f.label) + (f.hint ? ' <span class="hint">' + esc(f.hint) + '</span>' : '') + '</label>' +
+        '</div>'
+      );
+      let input;
+      if (f.type === 'select') {
+        input = el('<select class="select" id="f_' + f.key + '"></select>');
+        for (const o of f.options) {
+          const opt = el('<option value="' + esc(o.value) + '">' + esc(o.label) + '</option>');
+          if (String(cfg[f.key]) === String(o.value)) opt.selected = true;
+          input.appendChild(opt);
+        }
+      } else if (f.type === 'number') {
+        input = el('<input class="input" type="number" id="f_' + f.key + '" value="' + esc(cfg[f.key]) + '">');
+      } else {
+        input = el('<input class="input" type="text" id="f_' + f.key + '" value="' + esc(cfg[f.key]) + '" autocomplete="off" spellcheck="false">');
+      }
+      input.addEventListener('input', () => { State.config[f.key] = input.value; regenerate(); updateCodePreview(); });
+      input.addEventListener('change', () => { State.config[f.key] = input.value; regenerate(); updateCodePreview(); });
+      field.appendChild(input);
+      cfgForm.appendChild(field);
+    }
+
+    // Code preview
+    const codeCard = el(
+      '<div class="card">' +
+        '<div class="card-head">' +
+          '<h3 class="card-title">' + ico('terminal') + ' Generated code</h3>' +
+          '<div style="display:flex;gap:6px">' +
+            '<button class="btn sm ghost" id="copyCode">' + ico('copy') + ' Copy</button>' +
+            '<button class="btn sm ghost" id="dlCode">' + ico('download') + ' .js</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="code-block" style="border:none;border-radius:0">' +
+          '<div class="code-head"><span class="lang">JavaScript (ESM)</span><span id="codeStats"></span></div>' +
+          '<pre class="code" id="codeOut"></pre>' +
+        '</div>' +
+      '</div>'
+    );
+    grid.appendChild(codeCard);
+    root.appendChild(grid);
+    setTimeout(updateCodePreview, 0);
+
+    $('#copyCode', root).addEventListener('click', async () => {
+      const ok = await copyToClipboard(State.code);
+      ok ? Toast.ok('Code copied (' + State.code.length + ' chars)') : Toast.err('Copy failed');
+    });
+    $('#dlCode', root).addEventListener('click', () => {
+      downloadBlob(new Blob([State.code], { type: 'text/javascript' }), getConfig().workerName + '.js');
+      Toast.ok('Downloaded ' + getConfig().workerName + '.js');
+    });
+
+    return root;
+  }
+};
+
+function updateCodePreview() {
+  const out = $('#codeOut');
+  if (!out) return;
+  out.innerHTML = highlightJS(State.code);
+  const stats = $('#codeStats');
+  if (stats) stats.textContent = State.code.length + ' chars · ' + State.code.split('\n').length + ' lines';
+}
+
+/* ---------------- TEST ---------------- */
+Views.test = {
+  title: 'Test',
+  render() {
+    regenerate();
+    const tpl = currentTemplate();
+    const root = el('<div></div>');
+
+    root.appendChild(el(
+      '<div style="margin-bottom:20px">' +
+        '<h2 style="font-size:22px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px">Test with real parameters</h2>' +
+        '<p style="font-size:13px;color:var(--text-2);margin:0">Fill in parameters — the request is built automatically and executed against the local runtime.</p>' +
+      '</div>'
+    ));
+
+    const grid = el('<div class="grid-2"></div>');
+
+    // Request builder
+    const reqCard = el(
+      '<div class="card">' +
+        '<div class="card-head">' +
+          '<h3 class="card-title">' + ico('play') + ' Parameters</h3>' +
+          '<button class="btn sm ghost" id="resetKv">' + ico('refresh') + ' Clear cache</button>' +
+        '</div>' +
+        '<div class="card-body">' +
+          '<div class="field">' +
+            '<label>Method</label>' +
+            '<div class="chips" id="methodChips">' +
+              '<button class="chip active" data-method="GET">GET</button>' +
+              '<button class="chip' + (tpl.isPost ? ' active' : '') + '" data-method="POST">POST</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Path</label>' +
+            '<input class="input" id="reqPath" value="/" autocomplete="off" spellcheck="false">' +
+          '</div>' +
+          '<div id="paramsForm" style="margin-bottom:14px"></div>' +
+          '<div class="copy-row" id="builtUrl" style="margin-bottom:14px;font-size:11px;padding:8px 10px"><span class="val">—</span>' +
+            '<button data-copy-url>' + ico('copy') + '</button></div>' +
+          '<button class="btn primary block" id="sendReq">' + ico('play') + ' Send request</button>' +
+        '</div>' +
+      '</div>'
+    );
+    grid.appendChild(reqCard);
+
+    // Response panel
+    const resCard = el(
+      '<div class="card">' +
+        '<div class="card-head">' +
+          '<h3 class="card-title">' + ico('zap') + ' Response</h3>' +
+          '<span id="resMeta" style="font-size:11.5px;color:var(--text-3);font-family:var(--mono)"></span>' +
+        '</div>' +
+        '<div class="card-body" style="padding:0" id="resBody">' +
+          '<div class="empty" style="padding:48px 20px">' + ico('zap') +
+            '<h3>Ready</h3><p>Fill in parameters and press Send.</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+    grid.appendChild(resCard);
+    root.appendChild(grid);
+
+    // Params form
+    const paramsForm = $('#paramsForm', root);
+    const params = getParams();
+    if (tpl.params && tpl.params.length) {
+      paramsForm.appendChild(el('<div style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3);margin-bottom:4px">Query parameters</div>'));
+      for (const p of tpl.params) {
+        const row = el('<div class="param-row"></div>');
+        row.appendChild(el('<label>' + esc(p.name) + (p.hint ? ' <span class="hint" style="color:var(--text-3);font-size:10px">' + esc(p.hint) + '</span>' : '') + '</label>'));
+        let input;
+        if (p.type === 'select') {
+          input = el('<select class="input"></select>');
+          for (const o of p.options) {
+            const opt = el('<option value="' + esc(o) + '">' + esc(o) + '</option>');
+            if (params[p.name] === o) opt.selected = true;
+            input.appendChild(opt);
+          }
+        } else if (p.type === 'number') {
+          input = el('<input class="input" type="number" value="' + esc(params[p.name]) + '">');
+        } else {
+          input = el('<input class="input" type="text" value="' + esc(params[p.name]) + '" autocomplete="off" spellcheck="false">');
+        }
+        input.addEventListener('input', () => { State.params[p.name] = input.value; updateBuiltUrl(); persist(); });
+        input.addEventListener('change', () => { State.params[p.name] = input.value; updateBuiltUrl(); persist(); });
+        row.appendChild(input);
+        paramsForm.appendChild(row);
+      }
+    } else {
+      paramsForm.appendChild(el('<div style="font-size:12px;color:var(--text-3);padding:12px 0">No query parameters for this template.</div>'));
+    }
+
+    // Method chips
+    let method = tpl.isPost ? 'POST' : 'GET';
+    $$('#methodChips .chip', root).forEach(c => {
+      c.addEventListener('click', () => {
+        method = c.dataset.method;
+        $$('#methodChips .chip', root).forEach(x => x.classList.toggle('active', x === c));
+        updateBuiltUrl();
+      });
+    });
+
+    function buildUrl() {
+      const tpl = currentTemplate();
+      const ps = getParams();
+      if (!tpl.params || !tpl.params.length) return '/(no params)';
+      if (tpl.isPost) {
+        const body = {};
+        for (const p of tpl.params) {
+          if (p.name === 'message') body.messages = [{ role: 'user', content: ps.message }];
+          else body[p.name] = ps[p.name];
+        }
+        return 'POST body: ' + JSON.stringify(body);
+      }
+      const qs = tpl.params.map(p => {
+        const v = ps[p.name];
+        if (v === '' || v == null) return null;
+        return encodeURIComponent(p.name) + '=' + encodeURIComponent(v);
+      }).filter(Boolean).join('&');
+      return ('/image?' + qs).replace('/image?', tpl.id === 'random' ? '/random?' : tpl.id === 'proxy' ? '/proxy?' : '/image?');
+    }
+
+    function updateBuiltUrl() {
+      const wrap = $('#builtUrl', root);
+      if (!wrap) return;
+      wrap.querySelector('.val').textContent = buildUrl();
+    }
+    updateBuiltUrl();
+
+    // Copy URL
+    $('#builtUrl', root).querySelector('[data-copy-url]').addEventListener('click', async () => {
+      const ok = await copyToClipboard(buildUrl());
+      ok ? Toast.ok('Copied') : Toast.err('Copy failed');
+    });
+
+    // Reset
+    $('#resetKv', root).addEventListener('click', () => {
+      LocalRunner.reset();
+      updateStats();
+      Toast.info('Local cache cleared');
+    });
+
+    // Send
+    $('#sendReq', root).addEventListener('click', async () => {
+      const btn = $('#sendReq', root);
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Running…';
+
+      const resBody = $('#resBody', root);
+      const resMeta = $('#resMeta', root);
+      resBody.innerHTML = '<div style="padding:40px;text-align:center"><span class="spinner lg"></span><div style="margin-top:12px;font-size:12.5px;color:var(--text-3)">Executing…</div></div>';
+      resMeta.textContent = '';
+
+      try {
+        regenerate();
+        const tpl = currentTemplate();
+        const ps = getParams();
+        const cfg = getConfig();
+        const origin = 'https://' + cfg.workerName + '.example.workers.dev';
+
+        let path = '/';
+        let body = null;
+        let reqMethod = method;
+
+        if (tpl.isPost) {
+          path = '/' + (tpl.id === 'chat' ? 'chat' : tpl.id === 'shortener' ? 'shorten' : 'api');
+          if (tpl.id === 'chat') {
+            body = JSON.stringify({ messages: [{ role: 'user', content: ps.message }], max_tokens: 64 });
+          } else if (tpl.id === 'shortener') {
+            body = JSON.stringify({ url: ps.url, slug: ps.slug || undefined });
+          } else {
+            body = JSON.stringify(ps);
+          }
+          reqMethod = 'POST';
+        } else if (tpl.params && tpl.params.length) {
+          path = '/' + (tpl.id === 'random' ? 'random' : tpl.id === 'proxy' ? 'proxy' : 'image');
+          const qs = tpl.params.map(p => {
+            const v = ps[p.name];
+            if (v === '' || v == null) return null;
+            return encodeURIComponent(p.name) + '=' + encodeURIComponent(v);
+          }).filter(Boolean).join('&');
+          if (qs) path += '?' + qs;
+        } else {
+          path = '/health';
+        }
+
+        const reqInit = { method: reqMethod, headers: {} };
+        if (body) { reqInit.body = body; reqInit.headers['Content-Type'] = 'application/json'; }
+        const req = new Request(origin + path, reqInit);
+
+        const { response, ms } = await LocalRunner.run(State.code, req);
+        await renderResponse(resBody, resMeta, response, ms);
+      } catch (e) {
+        resBody.innerHTML = '<div style="padding:24px"><div style="padding:14px;border-radius:10px;background:var(--red-soft);border:1px solid rgba(239,68,68,.3);color:#fca5a5;font-size:12.5px;line-height:1.6">' +
+          '<strong style="display:block;margin-bottom:6px">✗ Runtime error</strong>' + esc(e.message) + '</div></div>';
+        resMeta.textContent = 'error';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = ico('play') + ' Send request';
+        updateStats();
+      }
+    });
+
+    return root;
+  }
+};
+
+async function renderResponse(host, metaEl, response, ms) {
+  const ct = response.headers.get('Content-Type') || '';
+  const headers = [];
+  response.headers.forEach((v, k) => headers.push([k, v]));
+  metaEl.textContent = response.status + ' ' + response.statusText + ' · ' + ms + 'ms';
+
+  let bodyHTML;
+  if (ct.includes('image/')) {
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    bodyHTML =
+      '<div style="padding:16px">' +
+        '<img src="' + url + '" alt="Response">' +
+        '<div style="text-align:center;margin-top:12px;font-size:11.5px;color:var(--text-3);font-family:var(--mono)">' +
+          fmtBytes(blob.size) + ' · ' + esc(ct) +
+        '</div>' +
+      '</div>';
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } else {
+    const text = await response.text();
+    let pretty = text;
+    if (ct.includes('json')) { try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch {} }
+    bodyHTML =
+      '<div class="code-block" style="border:none;border-radius:0">' +
+        '<div class="code-head"><span class="lang">' + esc(ct.split(';')[0] || 'text') + '</span><span>' + fmtBytes(text.length) + '</span></div>' +
+        '<pre class="code" style="max-height:340px">' + (ct.includes('json') ? highlightJS(pretty) : esc(pretty)) + '</pre>' +
+      '</div>';
+  }
+
+  host.innerHTML =
+    '<div style="padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface-2)">' +
+      '<div style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px">Response headers</div>' +
+      '<div style="font-family:var(--mono);font-size:11.5px;color:var(--text-2);line-height:1.7">' +
+        headers.map(([k, v]) => '<div><span style="color:var(--accent)">' + esc(k) + '</span>: ' + esc(v.slice(0, 120)) + '</div>').join('') +
+      '</div>' +
+    '</div>' +
+    bodyHTML +
+    '<div style="padding:12px 18px;border-top:1px solid var(--border);background:var(--surface-2)">' +
+      '<div style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px">Execution log</div>' +
+      '<div style="font-family:var(--mono);font-size:11.5px;color:var(--text-2);line-height:1.6;max-height:160px;overflow-y:auto">' +
+        LocalRunner.log().slice(-30).map(l => {
+          const color = l.error || (l.status && l.status >= 400) ? 'var(--red)' : l.result === 'HIT' ? 'var(--green)' : 'var(--text-3)';
+          const op = l.op === 'KV GET' ? '· ' + l.key.slice(0, 36) + ' → ' + l.result
+                   : l.op === 'KV PUT' ? '↓ ' + l.key.slice(0, 36) + ' (' + fmtBytes(l.bytes) + ')'
+                   : l.op === 'FETCH' ? '→ ' + (l.status || l.error) + ' · ' + (l.ms || 0) + 'ms · ' + (l.url || '').slice(0, 60)
+                   : l.op;
+          return '<div style="color:' + color + '">' + esc(op) + '</div>';
+        }).join('') || '<div style="color:var(--text-3)">— no operations —</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function updateStats() {
+  const s = LocalRunner.stats();
+  const h = $('#statHits'), m = $('#statMisses'), f = $('#statFetches');
+  if (h) h.textContent = s.hits; if (m) m.textContent = s.misses; if (f) f.textContent = s.fetches;
+  const sb = $('#sbCache');
+  if (sb) sb.textContent = s.entries;
+}
+
+/* ---------------- DEPLOY ---------------- */
+Views.deploy = {
+  title: 'Deploy',
+  render() {
+    regenerate();
+    const cfg = getConfig();
+    const root = el('<div></div>');
+
+    root.appendChild(el(
+      '<div style="margin-bottom:20px">' +
+        '<h2 style="font-size:22px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px">Deploy</h2>' +
+        '<p style="font-size:13px;color:var(--text-2);margin:0">Three ways to ship this Worker.</p>' +
+      '</div>'
+    ));
+
+    const steps = el('<div class="card"><div class="card-body" style="padding:0 20px"><div class="steps" id="steps"></div></div></div>');
+    root.appendChild(steps);
+    const stepsHost = $('#steps', steps);
+
+    /* Step 1 */
+    stepsHost.appendChild(el(
+      '<div class="step">' +
+        '<div class="step-num">1</div>' +
+        '<div class="step-body">' +
+          '<h4 class="step-title">Fastest — Cloudflare Playground</h4>' +
+          '<p class="step-desc">Opens the Playground with your code already loaded. Click <strong>Deploy</strong> there and you get a live URL in ~30s. No account setup, no CLI. Bindings (KV) cannot be configured in the Playground — use method 2 or 3 for a real deployment.</p>' +
+          '<div class="step-action" style="display:flex;gap:8px;flex-wrap:wrap">' +
+            '<button class="btn primary sm" id="openPlayground">' + ico('external') + ' Open in Playground</button>' +
+            '<button class="btn sm ghost" id="copyForPlayground">' + ico('copy') + ' Copy code</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    ));
+
+    /* Step 2 */
+    const deployBtnUrl = CONFIG.deploy.deployButtonBase + 'https://github.com/YOUR-USERNAME/' + cfg.workerName;
+    stepsHost.appendChild(el(
+      '<div class="step">' +
+        '<div class="step-num">2</div>' +
+        '<div class="step-body">' +
+          '<h4 class="step-title">Recommended — GitHub + Deploy Button</h4>' +
+          '<p class="step-desc">Download a ready project ZIP, push it to a public GitHub repo, then use Cloudflare\'s Deploy Button. It auto-provisions KV namespaces and Workers AI bindings from <code>wrangler.jsonc</code>.</p>' +
+          '<div class="step-action" style="display:flex;gap:8px;flex-wrap:wrap">' +
+            '<button class="btn primary sm" id="dlProject">' + ico('download') + ' Download project .zip</button>' +
+            '<button class="btn sm ghost" id="showWrangler">' + ico('code') + ' Preview wrangler.jsonc</button>' +
+          '</div>' +
+          '<div style="margin-top:12px">' +
+            '<div style="font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px">Your Deploy Button URL</div>' +
+            '<div class="copy-row"><span class="val">' + esc(deployBtnUrl) + '</span>' +
+              '<button id="copyDeployBtn">' + ico('copy') + '</button></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    ));
+
+    /* Step 3 */
+    stepsHost.appendChild(el(
+      '<div class="step">' +
+        '<div class="step-num">3</div>' +
+        '<div class="step-body">' +
+          '<h4 class="step-title">Power users — Wrangler CLI</h4>' +
+          '<p class="step-desc">Full control. Requires Node 18+.</p>' +
+          '<div class="step-action">' +
+            '<button class="btn sm ghost" id="showCli">' + ico('terminal') + ' Show CLI commands</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    ));
+
+    /* QR for the eventual URL */
+    const qrCard = el(
+      '<div class="card" style="margin-top:18px">' +
+        '<div class="card-head"><h3 class="card-title">' + ico('qr') + ' QR — Deploy Button</h3></div>' +
+        '<div class="card-body" style="padding:0">' +
+          '<div class="qr-frame" id="qrHost1"></div>' +
+          '<div style="padding:12px 18px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text-3);text-align:center">' +
+            'Scan with your phone to open the Deploy Button from any device.' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+    root.appendChild(qrCard);
+    const qrCanvas = document.createElement('canvas');
+    try {
+      QR.renderCanvas(qrCanvas, deployBtnUrl, { scale: 6, margin: 2 });
+      $('#qrHost1', qrCard).appendChild(el('<div class="qr-wrap"></div>')).appendChild(qrCanvas);
+      const dl = el('<button class="btn sm ghost">' + ico('download') + ' Download PNG</button>');
+      dl.addEventListener('click', () => qrCanvas.toBlob(b => downloadBlob(b, cfg.workerName + '-deploy-qr.png')));
+      $('#qrHost1', qrCard).appendChild(dl);
+    } catch (e) {
+      $('#qrHost1', qrCard).innerHTML = '<div style="color:var(--red);font-size:12px">QR generation failed: ' + esc(e.message) + '</div>';
+    }
+
+    /* Wire up */
+    $('#openPlayground', root).addEventListener('click', () => {
+      const compressed = LZString.compressToEncodedURIComponent(State.code);
+      const url = CONFIG.deploy.playgroundBase + '#' + compressed;
+      if (url.length > 8000) {
+        Toast.warn('Code too large for URL — opening playground, paste code manually');
+        copyToClipboard(State.code);
+        window.open(CONFIG.deploy.playgroundBase, '_blank', 'noopener');
+        return;
+      }
+      window.open(url, '_blank', 'noopener');
+      Toast.ok('Playground opened — click Deploy there');
+    });
+
+    $('#copyForPlayground', root).addEventListener('click', async () => {
+      const ok = await copyToClipboard(State.code);
+      ok ? Toast.ok('Code copied') : Toast.err('Copy failed');
+      window.open(CONFIG.deploy.playgroundBase, '_blank', 'noopener');
+    });
+
+    $('#copyDeployBtn', root).addEventListener('click', async () => {
+      const ok = await copyToClipboard(deployBtnUrl);
+      ok ? Toast.ok('Copied') : Toast.err('Copy failed');
+    });
+
+    $('#dlProject', root).addEventListener('click', () => {
+      const files = buildProjectFiles(cfg);
+      downloadBlob(makeZip(files), cfg.workerName + '-worker.zip');
+      Toast.ok('Downloaded · ' + files.length + ' files');
+    });
+
+    $('#showWrangler', root).addEventListener('click', () => showCodeModal('wrangler.jsonc', buildWranglerJsonc(cfg)));
+    $('#showCli', root).addEventListener('click', () => showCodeModal('Wrangler CLI deployment', buildCliInstructions(cfg)));
+
+    return root;
+  }
+};
+
+/* ---------------- SHARE & QR ---------------- */
+Views.share = {
+  title: 'Share & QR',
+  render() {
+    regenerate();
+    const cfg = getConfig();
+    const base = 'https://' + cfg.workerName + '.YOUR-SUBDOMAIN.workers.dev';
+    const root = el('<div></div>');
+
+    root.appendChild(el(
+      '<div style="margin-bottom:20px">' +
+        '<h2 style="font-size:22px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px">Share</h2>' +
+        '<p style="font-size:13px;color:var(--text-2);margin:0">After deploying, replace <code>YOUR-SUBDOMAIN</code> with the value Cloudflare shows.</p>' +
+      '</div>'
+    ));
+
+    const grid = el('<div class="grid-2"></div>');
+
+    /* Left: Endpoint + QR */
+    const left = el(
+      '<div class="stack-lg">' +
+        '<div class="card">' +
+          '<div class="card-head"><h3 class="card-title">' + ico('cloud') + ' Endpoint URL</h3></div>' +
+          '<div class="card-body">' +
+            '<div class="copy-row"><span class="val" id="endpointVal">' + esc(base) + '</span>' +
+              '<button data-copy="' + esc(base) + '">' + ico('copy') + '</button></div>' +
+            '<div style="margin-top:12px">' +
+              '<div class="field" style="margin-bottom:0">' +
+                '<label>Edit URL</label>' +
+                '<input class="input" id="endpointEdit" value="' + esc(base) + '" spellcheck="false">' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card">' +
+          '<div class="card-head"><h3 class="card-title">' + ico('qr') + ' QR Code</h3></div>' +
+          '<div class="card-body" style="padding:0">' +
+            '<div class="qr-frame" id="qrHost">' +
+              '<div class="qr-wrap" id="qrWrap"><canvas id="qrCanvas"></canvas></div>' +
+              '<div class="caption" id="qrCaption">' + esc(base) + '</div>' +
+              '<div style="display:flex;gap:6px">' +
+                '<button class="btn sm ghost" id="qrDownload">' + ico('download') + ' PNG</button>' +
+                '<button class="btn sm ghost" id="qrCopyUrl">' + ico('copy') + ' Copy URL</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+    grid.appendChild(left);
+    const qrCanvas = $('#qrCanvas', left);
+    let currentUrl = base;
+
+    function updateQR(url) {
+      currentUrl = url;
+      try {
+        QR.renderCanvas(qrCanvas, url, { scale: 6, margin: 2, ec: 'M' });
+        $('#qrCaption', left).textContent = url;
+      } catch (e) {
+        Toast.err('QR failed: ' + e.message);
+      }
+    }
+    updateQR(base);
+
+    $('#endpointEdit', left).addEventListener('input', debounce(() => {
+      updateQR($('#endpointEdit', left).value);
+    }, 250));
+
+    $('#qrDownload', left).addEventListener('click', () => {
+      qrCanvas.toBlob(b => downloadBlob(b, cfg.workerName + '-qr.png'));
+    });
+    $('#qrCopyUrl', left).addEventListener('click', async () => {
+      const ok = await copyToClipboard(currentUrl);
+      ok ? Toast.ok('Copied') : Toast.err('Copy failed');
+    });
+
+    /* Right: Snippets */
+    const right = el(
+      '<div class="card">' +
+        '<div class="card-head">' +
+          '<h3 class="card-title">' + ico('code') + ' Client snippets</h3>' +
+          '<div class="chips" id="langChips"></div>' +
+        '</div>' +
+        '<div class="card-body" style="padding:0" id="snippetHost"></div>' +
+      '</div>'
+    );
+    grid.appendChild(right);
+    root.appendChild(grid);
+
+    const snippets = buildSnippets(base, cfg, State.templateId);
+    let activeLang = snippets[0].lang;
+    const chips = $('#langChips', right);
+    snippets.forEach(s => {
+      const c = el('<button class="chip' + (s.lang === activeLang ? ' active' : '') + '" data-lang="' + s.lang + '">' + esc(s.lang) + '</button>');
+      c.addEventListener('click', () => {
+        activeLang = s.lang;
+        $$('#langChips .chip', right).forEach(x => x.classList.toggle('active', x.dataset.lang === activeLang));
+        renderSnippet();
+      });
+      chips.appendChild(c);
+    });
+
+    function renderSnippet() {
+      const s = snippets.find(x => x.lang === activeLang) || snippets[0];
+      $('#snippetHost', right).innerHTML =
+        '<div class="code-block" style="border:none;border-radius:0">' +
+          '<div class="code-head"><span class="lang">' + esc(s.lang) + '</span>' +
+            '<button class="btn sm ghost" data-copy-snippet>' + ico('copy') + ' Copy</button></div>' +
+          '<pre class="code" style="max-height:400px">' + esc(s.code) + '</pre>' +
+        '</div>';
+      const cp = $('#snippetHost', right).querySelector('[data-copy-snippet]');
+      if (cp) cp.addEventListener('click', async () => {
+        const ok = await copyToClipboard(s.code);
+        ok ? Toast.ok('Copied') : Toast.err('Copy failed');
+      });
+    }
+    renderSnippet();
+
+    left.querySelectorAll('[data-copy]').forEach(b => {
+      b.addEventListener('click', async () => {
+        const ok = await copyToClipboard(b.dataset.copy);
+        ok ? Toast.ok('Copied') : Toast.err('Copy failed');
+      });
+    });
+
+    return root;
+  }
+};
+
+/* ---------------- VIVID ---------------- */
+Views.vivid = {
+  title: 'Connect to Vivid',
+  render() {
+    regenerate();
+    const cfg = getConfig();
+    const workerUrl = 'https://' + cfg.workerName + '.YOUR-SUBDOMAIN.workers.dev';
+    const root = el('<div></div>');
+
+    root.appendChild(el(
+      '<div style="margin-bottom:20px">' +
+        '<h2 style="font-size:22px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px">Connect to Vivid</h2>' +
+        '<p style="font-size:13px;color:var(--text-2);margin:0">Use this Worker as Vivid\'s image-generation backend — with KV caching, your own domain, and optional auth.</p>' +
+      '</div>'
+    ));
+
+    /* Vivid card */
+    root.appendChild(el(
+      '<div class="vivid-card" style="margin-bottom:20px">' +
+        '<div class="vhead">' +
+          '<div class="vlogo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3" fill="#fff" stroke="none"/></svg></div>' +
+          '<div><div class="vtitle">Vivid</div>' +
+            '<div style="font-size:12px;color:var(--text-3)">AI Image Studio</div></div>' +
+        '</div>' +
+        '<p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.6;position:relative">' +
+          'Vivid is a single-file AI image studio that runs entirely in the browser. By default it calls Pollinations.ai directly. ' +
+          'Point it at your Worker for: <strong>7-day KV caching</strong> (fewer upstream calls), <strong>custom CORS</strong>, ' +
+          '<strong>Bearer auth</strong>, and <strong>usage logs</strong> in Cloudflare Analytics.' +
+        '</p>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;position:relative">' +
+          '<a class="btn primary sm" href="' + CONFIG.vivid.url + '" target="_blank" rel="noopener">' + ico('external') + ' Open Vivid</a>' +
+          '<button class="btn sm" id="copyVividConfig">' + ico('copy') + ' Copy config</button>' +
+        '</div>' +
+      '</div>'
+    ));
+
+    /* Steps */
+    const stepsCard = el(
+      '<div class="card" style="margin-bottom:18px">' +
+        '<div class="card-head"><h3 class="card-title">' + ico('rocket') + ' 5-step integration</h3></div>' +
+        '<div class="card-body" style="padding:0 20px"><div class="steps" id="steps"></div></div>' +
+      '</div>'
+    );
+    root.appendChild(stepsCard);
+    const stepsHost = $('#steps', stepsCard);
+
+    stepsHost.appendChild(el(
+      '<div class="step">' +
+        '<div class="step-num">1</div>' +
+        '<div class="step-body">' +
+          '<h4 class="step-title">Deploy this Worker</h4>' +
+          '<p class="step-desc">Use any of the three methods from the Deploy tab. You\'ll get a URL like <code>' + esc(workerUrl) + '</code>.</p>' +
+        '</div>' +
+      '</div>'
+    ));
+
+    stepsHost.appendChild(el(
+      '<div class="step">' +
+        '<div class="step-num">2</div>' +
+        '<div class="step-body">' +
+          '<h4 class="step-title">Test the Worker</h4>' +
+          '<p class="step-desc">Open the URL with <code>/health</code> appended. You should see <code>{ "ok": true }</code>.</p>' +
+          '<div class="copy-row" style="margin-top:8px"><span class="val">' + esc(workerUrl) + '/health</span>' +
+            '<button data-copy="' + esc(workerUrl) + '/health">' + ico('copy') + '</button></div>' +
+        '</div>' +
+      '</div>'
+    ));
+
+    stepsHost.appendChild(el(
+      '<div class="step">' +
+        '<div class="step-num">3</div>' +
+        '<div class="step-body">' +
+          '<h4 class="step-title">Open Vivid → Settings</h4>' +
+          '<p class="step-desc">In Vivid, open the sidebar and go to <strong>Settings</strong>. Scroll to the <strong>Custom endpoint</strong> section.</p>' +
+        '</div>' +
+      '</div>'
+    ));
+
+    stepsHost.appendChild(el(
+      '<div class="step">' +
+        '<div class="step-num">4</div>' +
+        '<div class="step-body">' +
+          '<h4 class="step-title">Paste the Worker URL</h4>' +
+          '<p class="step-desc">In Vivid\'s Settings, set the <strong>Custom endpoint base URL</strong> field to your Worker URL. If you enabled Bearer auth in the Worker, also paste the token in the API key field.</p>' +
+          '<div class="copy-row" style="margin-top:8px"><span class="val">' + esc(workerUrl) + '</span>' +
+            '<button data-copy="' + esc(workerUrl) + '">' + ico('copy') + '</button></div>' +
+        '</div>' +
+      '</div>'
+    ));
+
+    stepsHost.appendChild(el(
+      '<div class="step">' +
+        '<div class="step-num">5</div>' +
+        '<div class="step-body">' +
+          '<h4 class="step-title">Select "Custom endpoint" as provider</h4>' +
+          '<p class="step-desc">Back in Vivid\'s Generate view, choose <strong>Custom endpoint</strong> from the Provider dropdown. Every image you generate now flows through your Worker.</p>' +
+        '</div>' +
+      '</div>'
+    ));
+
+    /* Config JSON */
+    const configJson = JSON.stringify({
+      provider: 'custom',
+      endpoint: workerUrl,
+      authorization: cfg.requireAuth === 'yes' ? 'Bearer YOUR_SECRET' : null,
+      note: 'Paste into Vivid Settings → Custom endpoint'
+    }, null, 2);
+
+    const cfgCard = el(
+      '<div class="card">' +
+        '<div class="card-head">' +
+          '<h3 class="card-title">' + ico('code') + ' Vivid config JSON</h3>' +
+          '<button class="btn sm ghost" id="copyCfg">' + ico('copy') + ' Copy</button>' +
+        '</div>' +
+        '<div class="code-block" style="border:none;border-radius:0">' +
+          '<div class="code-head"><span class="lang">JSON</span></div>' +
+          '<pre class="code">' + esc(configJson) + '</pre>' +
+        '</div>' +
+      '</div>'
+    );
+    root.appendChild(cfgCard);
+
+    /* Wire up */
+    root.querySelectorAll('[data-copy]').forEach(b => {
+      b.addEventListener('click', async () => {
+        const ok = await copyToClipboard(b.dataset.copy);
+        ok ? Toast.ok('Copied') : Toast.err('Copy failed');
+      });
+    });
+    $('#copyCfg', root).addEventListener('click', async () => {
+      const ok = await copyToClipboard(configJson);
+      ok ? Toast.ok('Config copied') : Toast.err('Copy failed');
+    });
+    $('#copyVividConfig', root).addEventListener('click', async () => {
+      const ok = await copyToClipboard(workerUrl);
+      ok ? Toast.ok('Worker URL copied — paste it in Vivid Settings') : Toast.err('Copy failed');
+    });
+
+    return root;
+  }
+};
+
+/* ---------------- DOCS ---------------- */
+Views.docs = {
+  title: 'Guide',
+  render() {
+    const root = el('<div style="max-width:760px"></div>');
+    root.appendChild(el(
+      '<div style="margin-bottom:20px">' +
+        '<h2 style="font-size:22px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px">Guide</h2>' +
+        '<p style="font-size:13px;color:var(--text-2);margin:0">Everything this tool does — and what it can\'t do.</p>' +
+      '</div>'
+    ));
+
+    const sections = [
+      { title: 'What this does', body: 'Generates complete, production-ready Cloudflare Worker code with KV caching, CORS, input validation, proper errors and a health check. The Test tab runs the generated code in a mocked runtime (KV, ctx.waitUntil) so you can verify behaviour before deploying.' },
+      { title: 'What this does not do', body: 'This app runs entirely in your browser and cannot log into your Cloudflare account. It generates the code, config files, ZIP project and deep links, but the final Deploy click happens on Cloudflare\'s own interface. That\'s by design — OAuth tokens in a browser tab are a real security risk.' },
+      { title: 'Deploy method 1 — Playground', body: 'The code is embedded into a Playground URL using LZString compression (the same format Cloudflare uses for its Share button). You land with your code loaded, click Deploy, get a live URL. Bindings (KV, AI) cannot be set here — the Playground is code-only.' },
+      { title: 'Deploy method 2 — GitHub + Deploy Button', body: 'Download the ZIP, push to a public GitHub repo, then use Cloudflare\'s Deploy Button. Cloudflare clones the repo, provisions KV namespaces and Workers AI bindings from wrangler.jsonc, and deploys it to your account. This is how Cloudflare\'s own templates are distributed.' },
+      { title: 'Deploy method 3 — Wrangler CLI', body: 'Full manual control. Requires Node 18+. You create the KV namespace, paste the code into src/index.js, and run `npx wrangler deploy`. Best for iteration and `wrangler tail` debugging.' },
+      { title: 'About the QR code', body: 'The QR generator is a pure-JavaScript implementation of the QR Code spec (ISO/IEC 18004), covering versions 1–10 with all four error-correction levels. It handles byte mode with automatic version selection and mask evaluation. No network call, no external API — the QR renders locally on Canvas.' },
+      { title: 'About the local test', body: 'The Test tab evaluates your Worker with `new Function`. Real `fetch`, `Request`, `Response`, `Headers`, `URL`, `TextDecoder`, `crypto` are provided natively. KV, caches, and ctx.waitUntil are shimmed. Workers AI throws a clear error since it only runs on Cloudflare. Real HTTP requests appear in the log.' },
+      { title: 'Connecting to Vivid', body: 'Vivid is a single-file AI image studio (also browser-native). Point it at your Worker for 7-day KV caching, custom CORS and optional Bearer auth. See the "Connect to Vivid" tab for a step-by-step walkthrough.' },
+      { title: 'Free tier limits', body: 'Cloudflare Workers free: 100,000 requests/day, 10ms CPU per request. KV free: 100,000 reads + 1,000 writes/day. For image proxy templates, 100k/day is generous — most side projects never come close.' },
+      { title: 'Security notes', body: 'The JSON Proxy template ships with a host whitelist to prevent open proxy abuse. Never remove it without adding your own auth. The URL Shortener restricts to http(s). Change CORS origin from * to your domain before production. Use `wrangler secret put` for tokens — never inline secrets.' },
+      { title: 'Bindings cheat sheet', body: 'KV: `npx wrangler kv namespace create CACHE_KV` → paste the returned ID into wrangler.jsonc. Workers AI: add `"ai": { "binding": "AI" }` to wrangler.jsonc, no other setup. Models used: `@cf/black-forest-labs/flux-1-schnell` (4-step distilled FLUX) and `@cf/meta/llama-3.1-8b-instruct`.' }
+    ];
+    for (const s of sections) {
+      root.appendChild(el(
+        '<div class="card" style="margin-bottom:14px"><div class="card-body">' +
+          '<h3 style="font-size:14px;font-weight:600;margin:0 0 8px">' + esc(s.title) + '</h3>' +
+          '<p style="font-size:13px;color:var(--text-2);line-height:1.65;margin:0">' + esc(s.body) + '</p>' +
+        '</div></div>'
+      ));
+    }
+    return root;
+  }
+};
+
+/* ============================================================
+   HELPERS — Project files, snippets
+   ============================================================ */
+function buildWranglerJsonc(cfg) {
+  const tpl = currentTemplate();
+  const needsKV = tpl.id !== 'chat' || (tpl.id === 'chat' && false);
+  const needsAI = tpl.id === 'chat' || (tpl.id === 'image' && cfg.upstream === 'workers-ai');
+  let extra = '';
+  if (needsKV && needsAI) {
+    extra = ',\n  "kv_namespaces": [\n    { "binding": "CACHE_KV", "id": "00000000000000000000000000000000" }\n  ],\n  "ai": { "binding": "AI" }';
+  } else if (needsKV) {
+    extra = ',\n  "kv_namespaces": [\n    { "binding": "CACHE_KV", "id": "00000000000000000000000000000000" }\n  ]';
+  } else if (needsAI) {
+    extra = ',\n  "ai": { "binding": "AI" }';
+  }
+  return `{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "${cfg.workerName}",
+  "main": "src/index.js",
+  "compatibility_date": "${new Date().toISOString().slice(0, 10)}",
+  "observability": { "enabled": true }${extra}
+}
+`;
+}
+
+function buildPackageJson(cfg) {
+  return JSON.stringify({
+    name: cfg.workerName, version: '1.0.0', private: true,
+    scripts: { dev: 'wrangler dev', deploy: 'wrangler deploy', tail: 'wrangler tail' },
+    devDependencies: { wrangler: '^4.0.0' }
+  }, null, 2) + '\n';
+}
+
+function buildReadme(cfg) {
+  const url = CONFIG.deploy.deployButtonBase + 'https://github.com/YOUR-USERNAME/' + cfg.workerName;
+  return `# ${cfg.workerName}
+
+Generated by **Worker Forge** — a Cloudflare Worker.
+
+## One-click deploy
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](${url})
+
+> Replace \`YOUR-USERNAME\` with your GitHub username after pushing.
+
+## Manual deploy
+
+\`\`\`bash
+npm install
+npx wrangler deploy
+\`\`\`
+
+## Template
+
+**${currentTemplate().name}** — ${currentTemplate().description}
+`;
+}
+
+function buildProjectFiles(cfg) {
+  const enc = new TextEncoder();
+  return [
+    { name: cfg.workerName + '/src/index.js', data: enc.encode(State.code) },
+    { name: cfg.workerName + '/wrangler.jsonc', data: enc.encode(buildWranglerJsonc(cfg)) },
+    { name: cfg.workerName + '/package.json', data: enc.encode(buildPackageJson(cfg)) },
+    { name: cfg.workerName + '/README.md', data: enc.encode(buildReadme(cfg)) },
+    { name: cfg.workerName + '/.gitignore', data: enc.encode('node_modules/\n.wrangler/\n.dev.vars\n') }
+  ];
+}
+
+function buildCliInstructions(cfg) {
+  return `# Deploy with Wrangler CLI
+
+## 1. Prerequisites
+- Node.js 18+
+- Cloudflare account (free)
+
+## 2. Login
+\`\`\`bash
+npx wrangler login
+\`\`\`
+
+## 3. Create KV namespace
+\`\`\`bash
+npx wrangler kv namespace create CACHE_KV
+\`\`\`
+Copy the printed ID into wrangler.jsonc.
+
+## 4. Save code
+Put the generated code into src/index.js.
+
+## 5. Deploy
+\`\`\`bash
+npx wrangler deploy
+\`\`\`
+
+## 6. Tail logs
+\`\`\`bash
+npx wrangler tail
+\`\`\`
+`;
+}
+
+function buildSnippets(base, cfg, tplId) {
+  const isImage = tplId === 'image' || tplId === 'vivid';
+  const isChat = tplId === 'chat';
+  const isProxy = tplId === 'proxy';
+  const isShort = tplId === 'shortener';
+  const isRandom = tplId === 'random';
+
+  let samplePath = '/health';
+  let sampleBody = null;
+  if (isImage) samplePath = '/image?prompt=a%20serene%20garden&model=flux&w=1024&h=1024';
+  else if (isChat) { samplePath = '/chat'; sampleBody = '{"messages":[{"role":"user","content":"Hello"}]}'; }
+  else if (isProxy) samplePath = '/proxy?url=https://jsonplaceholder.typicode.com/todos/1';
+  else if (isShort) { samplePath = '/shorten'; sampleBody = '{"url":"https://example.com"}'; }
+  else if (isRandom) samplePath = '/random?w=800&h=600';
+
+  const url = base + samplePath;
+  const snippets = [];
+
+  snippets.push({ lang: 'cURL', code: sampleBody
+    ? `curl -X POST '${url}' \\\n  -H 'Content-Type: application/json' \\\n  -d '${sampleBody}'`
+    : `curl '${url}'` });
+
+  snippets.push({ lang: 'JavaScript', code: sampleBody
+    ? `const res = await fetch('${url}', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify(${prettyJSON(sampleBody)}),\n});\nconst data = await res.json();\nconsole.log(data);`
+    : `const res = await fetch('${url}');\n${isImage || isRandom ? 'const blob = await res.blob();\nconst imgUrl = URL.createObjectURL(blob);' : 'const data = await res.json();\nconsole.log(data);'}` });
+
+  snippets.push({ lang: 'Python', code: sampleBody
+    ? `import requests\n\nres = requests.post("${url}", json=${prettyPython(sampleBody)}, timeout=60)\nres.raise_for_status()\nprint(res.json())`
+    : `import requests\n\nres = requests.get("${url}", timeout=60)\nres.raise_for_status()\n${isImage || isRandom ? 'open("output.png","wb").write(res.content)' : 'print(res.json())'}` });
+
+  return snippets;
+}
+
+function prettyJSON(s) { try { return JSON.stringify(JSON.parse(s), null, 2); } catch { return s; } }
+function prettyPython(s) {
+  try {
+    const o = JSON.parse(s);
+    return JSON.stringify(o, null, 4).replace(/true/g, 'True').replace(/false/g, 'False').replace(/null/g, 'None');
+  } catch { return s; }
+}
+
+/* ============================================================
+   LZString (for Playground URLs)
+   ============================================================ */
+const LZString = (function () {
+  const key = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+  function _compress(uncompressed, bitsPerChar, getCharFromInt) {
+    if (uncompressed == null) return "";
+    let i, value;
+    const cd = {}, cdc = {};
+    let c = "", wc = "", w = "";
+    let enlargeIn = 2, dictSize = 3, numBits = 2;
+    const data = []; let dataVal = 0, dataPos = 0;
+    for (let ii = 0; ii < uncompressed.length; ii++) {
+      const ch = uncompressed.charAt(ii);
+      if (!Object.prototype.hasOwnProperty.call(cd, ch)) { cd[ch] = dictSize++; cdc[ch] = true; }
+      const wch = w + ch;
+      if (Object.prototype.hasOwnProperty.call(cd, wch)) { w = wch; }
+      else {
+        if (Object.prototype.hasOwnProperty.call(cdc, w)) {
+          if (w.charCodeAt(0) < 256) {
+            for (i = 0; i < numBits; i++) { dataVal = (dataVal << 1); if (dataPos === bitsPerChar - 1) { dataPos = 0; data.push(getCharFromInt(dataVal)); dataVal = 0; } else dataPos++; }
+            value = w.charCodeAt(0);
+            for (i = 0; i < 8; i++) { dataVal = (dataVal << 1) | (value & 1); if (dataPos === bitsPerChar - 1) { dataPos = 0; data.push(getCharFromInt(dataVal)); dataVal = 0; } else dataPos++; value = value >> 1; }
+          } else {
+            value = 1;
+            for (i = 0; i < numBits; i++) { dataVal = (dataVal << 1) | value; if (dataPos === bitsPerChar - 1) { dataPos = 0; data.push(getCharFromInt(dataVal)); dataVal = 0; } else dataPos++; value = 0; }
+            value = w.charCodeAt(0);
+            for (i = 0; i < 16; i++) { dataVal = (dataVal << 1) | (value & 1); if (dataPos === bitsPerChar - 1) { dataPos = 0; data.push(getCharFromInt(dataVal)); dataVal = 0; } else dataPos++; value = value >> 1; }
+          }
+          enlargeIn--; if (enlargeIn === 0) { enlargeIn = Math.pow(2, numBits); numBits++; }
+          delete cdc[w];
+        } else {
+          value = cd[w];
+          for (i = 0; i < numBits; i++) { dataVal = (dataVal << 1) | (value & 1); if (dataPos === bitsPerChar - 1) { dataPos = 0; data.push(getCharFromInt(dataVal)); dataVal = 0; } else dataPos++; value = value >> 1; }
+        }
+        enlargeIn--; if (enlargeIn === 0) { enlargeIn = Math.pow(2, numBits); numBits++; }
+        cd[wch] = dictSize++;
+        w = String(ch);
+      }
+    }
+    if (w !== "") {
+      if (Object.prototype.hasOwnProperty.call(cdc, w)) {
+        if (w.charCodeAt(0) < 256) {
+          for (i = 0; i < numBits; i++) { dataVal = (dataVal << 1); if (dataPos === bitsPerChar - 1) { dataPos = 0; data.push(getCharFromInt(dataVal)); dataVal = 0; } else dataPos++; }
+          value = w.charCodeAt(0);
+          for (i = 0; i < 8; i++) { dataVal = (dataVal << 1) | (value & 1); if (dataPos === bitsPerChar - 1) { dataPos = 0; data.push(getCharFromInt(dataVal)); dataVal = 0; } else dataPos++; value = value >> 1; }
+        } else {
+          value = 1;
+          for (i = 0; i < numBits; i++) { dataVal = (dataVal << 1) | value; if (dataPos === bitsPerChar - 1) { dataPos = 0; data.push(getCharFromInt(dataVal)); dataVal = 0; } else dataPos++; value = 0; }
+          value = w.charCodeAt(0);
+          for (i = 0; i < 16; i++) { dataVal = (dataVal << 1) | (value & 1); if (dataPos === bitsPerChar - 1) { dataPos = 0; data.push(getCharFromInt(dataVal)); dataVal = 0; } else dataPos++; value = value >> 1; }
+        }
+        enlargeIn--; if (enlargeIn === 0) { enlargeIn = Math.pow(2, numBits); numBits++; }
+        delete cdc[w];
+      } else {
+        value = cd[w];
+        for (i = 0; i < numBits; i++) { dataVal = (dataVal << 1) | (value & 1); if (dataPos === bitsPerChar - 1) { dataPos = 0; data.push(getCharFromInt(dataVal)); dataVal = 0; } else dataPos++; value = value >> 1; }
+      }
+      enlargeIn--; if (enlargeIn === 0) { enlargeIn = Math.pow(2, numBits); numBits++; }
+    }
+    value = 2;
+    for (i = 0; i < numBits; i++) { dataVal = (dataVal << 1) | (value & 1); if (dataPos === bitsPerChar - 1) { dataPos = 0; data.push(getCharFromInt(dataVal)); dataVal = 0; } else dataPos++; value = value >> 1; }
+    while (true) { dataVal = (dataVal << 1); if (dataPos === bitsPerChar - 1) { data.push(getCharFromInt(dataVal)); break; } else dataPos++; }
+    return data.join("");
+  }
+  return {
+    compressToEncodedURIComponent(input) {
+      if (input == null) return "";
+      return _compress(input, 6, a => key.charAt(a));
+    }
+  };
+})();
+
+/* ============================================================
+   ZIP (STORE, no compression)
+   ============================================================ */
+const CRC = (function () {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(buf) { let c = 0xFFFFFFFF; for (let i = 0; i < buf.length; i++) c = CRC[(c ^ buf[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) {
+  const enc = new TextEncoder();
+  const chunks = []; const central = []; let offset = 0;
+  const dt = new Date();
+  const dT = ((dt.getHours() << 11) | (dt.getMinutes() << 5) | (dt.getSeconds() >> 1)) & 0xFFFF;
+  const dD = (((dt.getFullYear() - 1980) << 9) | ((dt.getMonth() + 1) << 5) | dt.getDate()) & 0xFFFF;
+  for (const f of files) {
+    const nb = enc.encode(f.name);
+    const data = typeof f.data === 'string' ? enc.encode(f.data) : f.data;
+    const crc = crc32(data);
+    const local = new Uint8Array(30 + nb.length); const dv = new DataView(local.buffer);
+    dv.setUint32(0, 0x04034b50, true); dv.setUint16(4, 20, true); dv.setUint16(6, 0x0800, true);
+    dv.setUint16(10, dT, true); dv.setUint16(12, dD, true); dv.setUint32(14, crc, true);
+    dv.setUint32(18, data.length, true); dv.setUint32(22, data.length, true);
+    dv.setUint16(26, nb.length, true); local.set(nb, 30);
+    chunks.push(local, data);
+    const ce = new Uint8Array(46 + nb.length); const cv = new DataView(ce.buffer);
+    cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true); cv.setUint16(12, dT, true); cv.setUint16(14, dD, true);
+    cv.setUint32(16, crc, true); cv.setUint32(20, data.length, true); cv.setUint32(24, data.length, true);
+    cv.setUint16(28, nb.length, true); cv.setUint32(42, offset, true); ce.set(nb, 46);
+    central.push(ce);
+    offset += local.length + data.length;
+  }
+  const cs = central.reduce((s, c) => s + c.length, 0);
+  const end = new Uint8Array(22); const edv = new DataView(end.buffer);
+  edv.setUint32(0, 0x06054b50, true); edv.setUint16(8, files.length, true);
+  edv.setUint16(10, files.length, true); edv.setUint32(12, cs, true); edv.setUint32(16, offset, true);
+  return new Blob([...chunks, ...central, end], { type: 'application/zip' });
+}
+
+/* ============================================================
+   LOCAL RUNNER (mock CF runtime)
+   ============================================================ */
+const LocalRunner = (function () {
+  const kvStore = new Map();
+  let hitCount = 0, missCount = 0, fetchCount = 0;
+  const callLog = [];
+  function reset() { kvStore.clear(); hitCount = missCount = fetchCount = 0; callLog.length = 0; }
+  function log(entry) { callLog.push({ ...entry, ts: Date.now() }); if (callLog.length > 200) callLog.shift(); }
+  function makeEnv() {
+    return {
+      CACHE_KV: {
+        async get(key, opts) {
+          const v = kvStore.get(key);
+          if (v === undefined || v === null) { missCount++; log({ op: 'KV GET', key, result: 'MISS' }); return null; }
+          hitCount++; log({ op: 'KV GET', key, result: 'HIT', bytes: v.byteLength || v.length });
+          if (opts && opts.type === 'json') return JSON.parse(typeof v === 'string' ? v : new TextDecoder().decode(v));
+          if (opts && opts.type === 'arrayBuffer') return v instanceof ArrayBuffer ? v : new TextEncoder().encode(v).buffer;
+          return v;
+        },
+        async put(key, value, opts) {
+          const stored = value instanceof ArrayBuffer ? value : value instanceof Uint8Array ? value.buffer : String(value);
+          kvStore.set(key, stored);
+          log({ op: 'KV PUT', key, bytes: stored.byteLength || stored.length, ttl: opts?.expirationTtl });
+          return true;
+        },
+        async delete(key) { kvStore.delete(key); log({ op: 'KV DELETE', key }); return true; }
+      },
+      AI: { async run(model, inputs) { log({ op: 'AI RUN', model }); throw new Error('Workers AI is only available on Cloudflare. Deploy to test this code path.'); } },
+      VIVID_TOKEN: 'demo-token',
+      PROXY_TOKEN: 'demo-token'
+    };
+  }
+  async function run(code, request) {
+    let body = code.replace(/export\s+default\s+/g, 'var __default = ').replace(/^\s*export\s+/gm, '');
+    body += '\nreturn typeof __default !== "undefined" ? __default : null;';
+    const wrappedFetch = async function (input, init) {
+      fetchCount++;
+      const url = typeof input === 'string' ? input : input.url;
+      const t0 = performance.now();
+      try {
+        const res = await fetch(input, init);
+        log({ op: 'FETCH', url: String(url).slice(0, 200), status: res.status, ms: Math.round(performance.now() - t0) });
+        return res;
+      } catch (e) { log({ op: 'FETCH', url: String(url).slice(0, 200), error: e.message }); throw e; }
+    };
+    const cachesShim = { default: { async match() { return null; }, async put() {} } };
+    const ctx = { waitUntil: p => { Promise.resolve(p).catch(err => log({ op: 'waitUntil', error: err.message })); } };
+    let handler;
+    try {
+      const fn = new Function('fetch', 'caches', 'Request', 'Response', 'Headers', 'URL', 'TextDecoder', 'TextEncoder', 'atob', 'btoa', 'crypto', body);
+      handler = fn(wrappedFetch, cachesShim, Request, Response, Headers, URL, TextDecoder, TextEncoder, atob, btoa, crypto);
+    } catch (e) { throw new Error('Syntax error: ' + e.message); }
+    if (!handler || typeof handler.fetch !== 'function') throw new Error('No fetch handler exported.');
+    const env = makeEnv();
+    const t0 = performance.now();
+    const response = await handler.fetch(request, env, ctx);
+    const ms = Math.round(performance.now() - t0);
+    await new Promise(r => setTimeout(r, 10));
+    return { response, ms };
+  }
+  return { run, reset, stats: () => ({ hits: hitCount, misses: missCount, fetches: fetchCount, entries: kvStore.size }), log: () => callLog.slice() };
+})();
+
+/* ============================================================
+   MODAL code viewer
+   ============================================================ */
+function showCodeModal(title, code) {
+  Modal.open(
+    '<div class="modal-head">' +
+      '<div><h3 class="modal-title">' + esc(title) + '</h3>' +
+        '<p class="modal-sub">Copy to clipboard and use it in your project</p></div>' +
+      '<button class="btn icon ghost" data-close>' + ico('x') + '</button>' +
+    '</div>' +
+    '<div class="modal-body" style="padding:0">' +
+      '<div class="code-block" style="border:none;border-radius:0">' +
+        '<div class="code-head"><span class="lang">' + esc(title) + '</span>' +
+          '<button class="btn sm ghost" data-copy>' + ico('copy') + ' Copy</button></div>' +
+        '<pre class="code" style="max-height:460px">' + highlightJS(code) + '</pre>' +
+      '</div>' +
+    '</div>' +
+    '<div class="modal-foot"><button class="btn ghost" data-close>Close</button></div>'
+  );
+  const root = Modal.root;
+  root.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => Modal.close()));
+  const cp = root.querySelector('[data-copy]');
+  if (cp) cp.addEventListener('click', async () => {
+    const ok = await copyToClipboard(code);
+    ok ? Toast.ok('Copied ' + code.length + ' chars') : Toast.err('Copy failed');
+  });
+}
+
+/* ============================================================
+   ROUTER
+   ============================================================ */
+const Router = {
+  async render(name) {
+    State.view = name;
+    if (name === 'design' || name === 'test') regenerate();
+    renderSidebar();
+    const view = Views[name] || Views.design;
+    const host = $('#view');
+    host.innerHTML = '';
+    const node = view.render();
+    host.appendChild(node);
+    $('#pageTitle').textContent = view.title || 'Worker Forge';
+    document.title = (view.title || 'Worker Forge') + ' · Worker Forge';
+    $$('.sb-item').forEach(b => b.classList.toggle('active', b.dataset.tpl === State.templateId || b.dataset.view === name));
+    window.scrollTo({ top: 0 });
+  }
+};
+
+/* ============================================================
+   THEME
+   ============================================================ */
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('wf.theme.v2', theme);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme === 'dark' ? '#0a0a0b' : '#fafafa');
+  const icon = $('#themeIcon');
+  if (icon) {
+    icon.outerHTML = '<svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">' +
+      (theme === 'dark'
+        ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
+        : '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>') +
+      '</svg>';
+  }
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+async function boot() {
+  Toast.init();
+  Modal.root = $('#modal');
+  Modal.backdrop = $('#modalBackdrop');
+  regenerate();
+  await Router.render('design');
+  if (window.innerWidth < 1000) $('#btnMenu').style.display = 'grid';
+
+  applyTheme(localStorage.getItem('wf.theme.v2') || 'dark');
+  $('#btnTheme').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    applyTheme(cur === 'dark' ? 'light' : 'dark');
+  });
+
+  $('#btnReset').addEventListener('click', () => {
+    if (!confirm('Reset configuration for this template?')) return;
+    State.config = {}; State.params = {};
+    regenerate();
+    Router.render('design');
+    Toast.ok('Reset');
+  });
+
+  $('#btnMenu').addEventListener('click', () => {
+    $('#sidebar').classList.toggle('open');
+    $('#sbBackdrop').classList.toggle('on');
+  });
+  $('#sbBackdrop').addEventListener('click', () => {
+    $('#sidebar').classList.remove('open');
+    $('#sbBackdrop').classList.remove('on');
+  });
+
+  $('#sbNav').addEventListener('click', (e) => {
+    const tplBtn = e.target.closest('[data-tpl]');
+    if (tplBtn) {
+      State.templateId = tplBtn.dataset.tpl;
+      State.config = {}; State.params = {};
+      regenerate();
+      Router.render('design');
+      $('#sidebar').classList.remove('open');
+      $('#sbBackdrop').classList.remove('on');
+      return;
+    }
+    const viewBtn = e.target.closest('[data-view]');
+    if (viewBtn) {
+      Router.render(viewBtn.dataset.view);
+      $('#sidebar').classList.remove('open');
+      $('#sbBackdrop').classList.remove('on');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (Modal.backdrop.classList.contains('on')) Modal.close();
+      else if ($('#sidebar').classList.contains('open')) {
+        $('#sidebar').classList.remove('open');
+        $('#sbBackdrop').classList.remove('on');
+      }
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      const btn = $('#sendReq');
+      if (btn && !btn.disabled) { e.preventDefault(); btn.click(); }
+    }
+  });
+
+  const mobnav = $('#mobNav');
+  mobnav.innerHTML = [
+    { id: 'design', icon: 'code', label: 'Design' },
+    { id: 'test', icon: 'play', label: 'Test' },
+    { id: 'deploy', icon: 'rocket', label: 'Deploy' },
+    { id: 'share', icon: 'share', label: 'Share' },
+    { id: 'vivid', icon: 'vivid', label: 'Vivid' }
+  ].map(n => '<button data-nav="' + n.id + '">' + ico(n.icon) + '<span>' + n.label + '</span></button>').join('');
+
+  mobnav.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-nav]');
+    if (b) Router.render(b.dataset.nav);
+  });
+
+  setInterval(() => {
+    $$('#mobNav button').forEach(b => {
+      if (b.dataset.nav === State.view) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
+    });
+  }, 300);
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>
